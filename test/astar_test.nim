@@ -80,21 +80,32 @@ suite "A* should":
 
     test "Yield a single point when goal == start":
         assert(
-            grid(
-                ". . .",
-                ". . .",
-                ". . ."),
+            grid(". . .",
+                 ". . .",
+                 ". . ."),
             starting = (0, 0), to = (0, 0),
-            equals = [(0, 0)]
-        )
+            equals = [(0, 0)] )
 
     test "Yield two points for connected points":
         assert(
-            grid(
-                ". . .",
-                ". . .",
-                ". . ."),
+            grid(". . .",
+                 ". . .",
+                 ". . ."),
             starting = (0, 0), to = (1, 0),
-            equals = [ (0, 0), (1, 0) ]
-        )
+            equals = [ (0, 0), (1, 0) ] )
+
+    test "Yield nothing if the goal is unreachable":
+        assert(
+            grid(". . .",
+                 ". . #",
+                 ". . ."),
+            starting = (0, 0), to = (2, 1),
+            equals = [] )
+
+        assert(
+            grid(". # .",
+                 "# # .",
+                 ". . ."),
+            starting = (0, 0), to = (2, 2),
+            equals = [] )
 

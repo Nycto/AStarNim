@@ -91,8 +91,11 @@ iterator path*[G: Graph, N: Node]( astar: AStar[G, N], start, goal: N ): N =
     while frontier.size > 0:
         let current = frontier.pop
 
-        # Once we reach the goalpost, we're set.
+        # Now that we have a map of back-references, yield the path back out to
+        # the caller
         if current.node == goal:
+            for node in backtrack(cameFrom, start, goal):
+                yield node
             break
 
         let currentCost = `[]`(cameFrom, current.node).cost
@@ -114,9 +117,4 @@ iterator path*[G: Graph, N: Node]( astar: AStar[G, N], start, goal: N ): N =
                     node: next,
                     priority: cost + astar.heuristic(next, goal)
                 ))
-
-    # Now that we have a map of back-references, yield the path back out to
-    # the caller
-    for node in backtrack(cameFrom, start, goal):
-        yield node
 
