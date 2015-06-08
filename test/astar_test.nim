@@ -1,14 +1,13 @@
 import astar, unittest, sets, sequtils, strutils, ropes, sets, math
 
 type
-    Grid = object
-        rows: seq[seq[int]]
+    Grid = seq[seq[int]]
 
     XY = tuple[x, y: int]
 
 proc grid( ascii: varargs[string] ): Grid =
     ## Creates a Grid from ascii art strings
-    var rows: seq[seq[int]] = @[]
+    result = @[]
     for asciiRow in ascii:
         var row: seq[int] = @[]
         for point in asciiRow:
@@ -18,12 +17,11 @@ proc grid( ascii: varargs[string] ): Grid =
             of '*': row.add(5)
             of '0'..'9': row.add(parseInt($point))
             else: row.add(-1)
-        rows.add(row)
-    return Grid(rows: rows)
+        result.add(row)
 
 proc cost[T]( grid: Grid, a, b: XY ): T =
     ## Returns the cost associated with moving to a point
-    return T( grid.rows[b.y][b.x] )
+    return T( grid[b.y][b.x] )
 
 iterator neighbors*( grid: Grid, point: XY ): XY =
     ## Yields the connected neighbors of a point
@@ -34,9 +32,9 @@ iterator neighbors*( grid: Grid, point: XY ): XY =
         (x: point.x, y: point.y + 1)
     ]
     for adj in adjacent:
-        if adj.y >= 0 and adj.y < grid.rows.len:
-            if adj.x >= 0 and adj.x < grid.rows[adj.y].len:
-                if grid.rows[adj.y][adj.x] >= 0:
+        if adj.y >= 0 and adj.y < grid.len:
+            if adj.x >= 0 and adj.x < grid[adj.y].len:
+                if grid[adj.y][adj.x] >= 0:
                     yield adj
 
 proc `$`( point: XY ): string =
@@ -51,18 +49,18 @@ proc str( title: string, grid: Grid, path: openArray[XY] ): string =
     var str = rope(title)
     str.add(":\n")
 
-    for y in countup(0, grid.rows.len - 1):
-        for x in countup(0, grid.rows.len - 1):
+    for y in countup(0, grid.len - 1):
+        for x in countup(0, grid.len - 1):
             if pathPoints.contains( (x: x, y: y) ):
                 str.add("@")
-            elif grid.rows[y][x] < 0:
+            elif grid[y][x] < 0:
                 str.add("#")
-            elif grid.rows[y][x] == 5:
+            elif grid[y][x] == 5:
                 str.add("*")
-            elif grid.rows[y][x] == 0:
+            elif grid[y][x] == 0:
                 str.add(".")
             else:
-                str.add($grid.rows[y][x])
+                str.add($grid[y][x])
             str.add(" ")
         str.add("\n")
 
