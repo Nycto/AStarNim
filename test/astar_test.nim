@@ -72,10 +72,7 @@ proc str( title: string, grid: Grid, path: openArray[XY] ): string =
 
 proc createAStar( grid: Grid ): AStar[Grid, XY, float] =
     ## Creates an AStar instance prefilled to use a manhatten distance heuristic
-    return newAStar[Grid, XY, float](grid) do (a, b: XY) -> float:
-        return sqrt(
-            pow(float(a.x) - float(b.x), 2) +
-            pow(float(a.y) - float(b.y), 2) )
+    return newAStar[Grid, XY, float](grid, asTheCrowFlies)
 
 proc assert( within: Grid, starting: XY, to: XY, equals: openArray[XY] ) =
     ## Asserts a path is created across the given grid

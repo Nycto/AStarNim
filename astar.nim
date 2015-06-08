@@ -3,7 +3,7 @@
 ## @see http://www.redblobgames.com/pathfinding/a-star/introduction.html
 ##
 
-import binaryheap, tables, hashes
+import binaryheap, tables, hashes, math
 
 type
     Distance* = int|float ## \
@@ -42,7 +42,7 @@ type
 
 proc newAStar*[G: Graph, N: Node, D: Distance](
     graph: G,
-    heuristic: proc(a, b: N): D {.closure.}
+    heuristic: proc(a, b: N): D
 ): AStar[G, N, D] =
     ## Creates a new AStar instance
     result = AStar[G, N, D]( graph: graph, heuristic: heuristic )
@@ -122,4 +122,14 @@ iterator path*[G: Graph, N: Node, D: Distance](
                     priority: cost + astar.heuristic(next, goal)
                 ))
 
+type
+    Point* = concept p ## \
+        ## An X/Y Coordinate
+        p.x is Distance
+        p.y is Distance
+
+proc asTheCrowFlies*( a, b: Point ): float {.procvar.} =
+    return sqrt(
+        pow(float(a.x) - float(b.x), 2) +
+        pow(float(a.y) - float(b.y), 2) )
 
