@@ -1,43 +1,46 @@
 ##
-## A-Star path finding
-## @see http://www.redblobgames.com/pathfinding/a-star/introduction.html
+## Classic A-Star path finding
+##
+## For more information about A-Star itself, the folks over at Red Blob Games
+## put together a very comprehensive introduction:
+##
+## http://www.redblobgames.com/pathfinding/a-star/introduction.html
 ##
 
 import binaryheap, tables, hashes, math
 
 type
-    Distance* = int|float ## \
-        ## Distance is used to measure cost and the heuristic between two points
+    Distance* = int|float
+        ## Distance is used for two things:
+        ## 1. To measure cost of moving between nodes
+        ## 2. To represent the heuristic that determines how close a point
+        ##    is to the goal
 
-    Node* = concept n ## \
-        ## Represents a node stored within a graph
+    Node* = concept n
+        ## Represents a node stored within a graph.
+        ## * `==`: Nodes must be comparable so we know when we reach the goal
+        ## * `hash`: Nodes are used as keys in a table, so they need to be
+        ##   hashable
+        `==`(n, n) is bool
+        `hash`(n) is THash
 
-        `==`(n, n) is bool ## \
-            ## Nodes must be comparable so we know when we reach the goal
+    Graph* = concept g
+        ## The graph being traversed.
+        ## * `nieghbors`: Iterates over the neighbors of a node in the graph
+        neighbors(g, Node) is iterator Node
 
-        `hash`(n) is THash ## \
-            ## Nodes are used as keys in a table, so they need to be hashable
-
-    Graph* = concept g ## \
-        ## The graph being traversed
-
-        neighbors(g, Node) is iterator Node ## \
-            ## Allows iteration over the neighbors of a node in the graph
-
-    AStar* [G, N, D] = object ## \
-        ## The configured A* interface \
-        ## `G` is the type for the overall graph
-        ## `N` is the type of element that represents nodes in the graph \
-        ## `D` is the numeric type to use for priorities and costs
-
-        graph: G ## \
-            ## The graph being traversed
-
-        cost: proc ( grid: G, a, b: N ): D ## \
-            ## Returns the cost of moving from one node to another
-
-        heuristic: proc (a, b: N): D ## \
-            ## Estimates the distance between two nodes in the graph
+    AStar* [G, N, D] = object
+        ## The configured A* interface.
+        ## * `[G]`: The type for the overall graph
+        ## * `[N]`: The type of element that represents nodes in the graph
+        ## * `[D]`: The numeric type to use for costs and the heuristic. See
+        ##   `Distance` above.
+        ## * `graph`: is a reference to the graph being traversed
+        ## * `cost`: Returns the cost of moving from one node to another
+        ## * `heuristic`: Estimates the distance between two nodes in the graph
+        graph: G
+        cost: proc ( grid: G, a, b: N ): D
+        heuristic: proc (a, b: N): D
 
 
 proc newAStar*[G: Graph, N: Node, D: Distance](
@@ -45,15 +48,16 @@ proc newAStar*[G: Graph, N: Node, D: Distance](
     heuristic: proc(a, b: N): D,
     cost: proc ( grid: G, a, b: N ): D
 ): AStar[G, N, D] =
-    ## Creates a new AStar instance
+    ## Creates a new AStar instance. See the `AStar` object above for a
+    ## description of types and parameters
     result = AStar[G, N, D]( graph: graph, heuristic: heuristic, cost: cost )
 
 
 type
-    FrontierElem[N, D] = tuple[node: N, priority: D] ## \
+    FrontierElem[N, D] = tuple[node: N, priority: D]
         ## Internally used to associate a graph node with how much it costs
 
-    CameFrom[N, D] = tuple[node: N, cost: D] ## \
+    CameFrom[N, D] = tuple[node: N, cost: D]
         ## Given a node, this stores the node you need to backtrack to to get
         ## to this node and how much it costs to get here
 
@@ -78,7 +82,8 @@ iterator backtrack[N, D](
 iterator path*[G: Graph, N: Node, D: Distance](
     astar: AStar[G, N, D], start, goal: N
 ): N =
-    ## Iterates over the nodes that connect the start and goal
+    ## Executes the A-Star algorithm and iterates over the nodes that connect
+    ## the start and goal
 
     # The frontier is the list of nodes we need to visit, sorted by a
     # combination of cost and how far we estimate them to be from the goal
@@ -127,17 +132,23 @@ iterator path*[G: Graph, N: Node, D: Distance](
                 ))
 
 type
-    Point* = concept p ## \
-        ## An X/Y Coordinate
+    Point* = concept p
+        ## An X/Y Coordinate. This isn't used by the A-Star algorithm itself,
+        ## but by the built in heuristic procs.
         p.x is Distance
         p.y is Distance
 
 proc asTheCrowFlies*( a, b: Point ): float {.procvar.} =
+    ## A convenience function that measures the exact distance between two
+    ## points. This is meant to be used as the heuristic when creating a new
+    ## `AStar` instance.
     return sqrt(
         pow(float(a.x) - float(b.x), 2) +
         pow(float(a.y) - float(b.y), 2) )
 
 proc manhattan*(a, b: Point): auto {.procvar.} =
-    ## Manhattan distance on a square grid
+    ## A convenience function that measures the manhattan distance between two
+    ## points. This is meant to be used as the heuristic when creating a new
+    ## `AStar` instance.
     return abs(a.x - b.x) + abs(a.y - b.y)
 
