@@ -25,9 +25,6 @@ proc cost( grid: Grid, a, b: XY ): float =
     ## Returns the cost associated with moving to a point
     return float(grid.rows[b.y][b.x])
 
-proc isValid( grid: Grid, point: XY ): bool =
-    ## Returns whether a point exists in this grid
-
 iterator neighbors*( grid: Grid, point: XY ): XY =
     ## Yields the connected neighbors of a point
     let adjacent = [
