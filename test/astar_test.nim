@@ -66,8 +66,14 @@ proc str( title: string, grid: Grid, path: openArray[XY] ): string =
             str.add(" ")
         str.add("\n")
 
-    str.add("Path:\n")
-    str.add(join(map(path, `$`), " -> "))
+    str.add("Path:")
+    for row in countup(0, int(floor(path.len / 5))):
+        str.add("\n  ")
+        for i in countup(row * 5, min(path.len - 1, row * 5 + 4)):
+            str.add(`$`(path[i]))
+            str.add(" -> ")
+    str.add("End\n")
+
     return $str
 
 proc createAStar( grid: Grid ): AStar[Grid, XY, float] =
