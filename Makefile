@@ -13,7 +13,7 @@ TESTS ?= $(notdir $(basename $(wildcard test/*_test.nim)))
 
 # Run all targets
 .PHONY: all
-all: test
+all: build/readme_* test
 
 # Run all tests
 .PHONY: test
@@ -68,6 +68,15 @@ for line in lines("README.md"):
         blob.add("\n")
 endef
 export EXTRACT_README_CODE
+
+
+# Compiles the code in the readme to make sure it works
+build/readme_%: README.md
+	@mkdir -p build
+	@echo "$$EXTRACT_README_CODE" > build/extract_readme_code.nim
+	$(call COMPILE,build/extract_readme_code.nim)
+	@build/extract_readme_code
+	ls build/readme_*.nim | xargs -n1 nim check --path:.
 
 
 # Watches for changes and reruns
