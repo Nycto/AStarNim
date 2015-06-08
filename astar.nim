@@ -86,7 +86,7 @@ iterator path*[G: Graph, N: Node, D: Distance](
             return cmp(a.priority, b.priority)
 
     # Put the start node into the frontier so we have a place to kick off
-    frontier.push( (node: start, priority: 0.0) )
+    frontier.push( (node: start, priority: D(0)) )
 
     # A map of backreferences. After getting to the goal, you use this to walk
     # backwards through the path and ultimately find the reverse path
@@ -102,12 +102,15 @@ iterator path*[G: Graph, N: Node, D: Distance](
                 yield node
             break
 
-        let currentCost: D = `[]`(cameFrom, current.node).cost
+        let currentCost = `[]`(cameFrom, current.node).cost
 
         for next in astar.graph.neighbors(current.node):
 
+            # The intrinsic cost of moving into this node
+            let nodeCost = D( astar.graph.cost(current.node, next) )
+
             # Adding current cost lets us track the total it took to get here
-            let cost = currentCost + astar.graph.cost(current.node, next)
+            let cost = currentCost + nodeCost
 
             # If we haven't seen this point already, or we found a cheaper
             # way to get to that
@@ -132,4 +135,8 @@ proc asTheCrowFlies*( a, b: Point ): float {.procvar.} =
     return sqrt(
         pow(float(a.x) - float(b.x), 2) +
         pow(float(a.y) - float(b.y), 2) )
+
+proc manhattan*(a, b: Point): auto {.procvar.} =
+    ## Manhattan distance on a square grid
+    return abs(a.x - b.x) + abs(a.y - b.y)
 

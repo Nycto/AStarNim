@@ -21,9 +21,9 @@ proc grid( ascii: varargs[string] ): Grid =
         rows.add(row)
     return Grid(rows: rows)
 
-proc cost( grid: Grid, a, b: XY ): float =
+proc cost[T]( grid: Grid, a, b: XY ): T =
     ## Returns the cost associated with moving to a point
-    return float(grid.rows[b.y][b.x])
+    return T( grid.rows[b.y][b.x] )
 
 iterator neighbors*( grid: Grid, point: XY ): XY =
     ## Yields the connected neighbors of a point
@@ -76,10 +76,13 @@ proc str( title: string, grid: Grid, path: openArray[XY] ): string =
 
     return $str
 
-proc assert( within: Grid, starting: XY, to: XY, equals: openArray[XY] ) =
+proc assert[T](
+    within: Grid, starting: XY, to: XY, equals: openArray[XY],
+    heuristic: proc (a, b: XY): T
+) =
     ## Asserts a path is created across the given grid
-    let astar = newAStar[Grid, XY, float](within, asTheCrowFlies)
-    let path = toSeq( path[Grid, XY, float](astar, starting, to) )
+    let astar = newAStar[Grid, XY, T](within, heuristic)
+    let path = toSeq( path[Grid, XY, T](astar, starting, to) )
     checkpoint( str("Actual", within, path) )
     checkpoint( str("Expected", within, equals) )
     assert( path == @equals )
@@ -98,53 +101,61 @@ proc walk( start: XY, directions: string ): seq[XY] =
         if current != result[result.len - 1]:
             result.add(current)
 
-proc assert( within: Grid, starting: XY, to: XY, equals: string ) =
-    assert( within, starting, to, walk(starting, equals) )
+proc assert[T](
+    within: Grid, starting: XY, to: XY, equals: string,
+    heuristic: proc (a, b: XY): T
+) =
+    assert[T]( within, starting, to, walk(starting, equals), heuristic )
 
 
 suite "A* should":
 
     test "Yield a single point when goal == start":
-        assert(
+        assert[float](
             grid(". . .",
                  ". . .",
                  ". . ."),
+            heuristic = asTheCrowFlies,
             starting = (0, 0), to = (0, 0),
             equals = [(0, 0)] )
 
     test "Yield two points for connected points":
-        assert(
+        assert[float](
             grid(". . .",
                  ". . .",
                  ". . ."),
+            heuristic = asTheCrowFlies,
             starting = (0, 0), to = (1, 0),
             equals = [ (0, 0), (1, 0) ] )
 
     test "Yield nothing if the goal is unreachable":
-        assert(
+        assert[float](
             grid(". . .",
                  ". . #",
                  ". . ."),
+            heuristic = asTheCrowFlies,
             starting = (0, 0), to = (2, 1),
             equals = [] )
 
-        assert(
+        assert[float](
             grid(". # .",
                  "# # .",
                  ". . ."),
+            heuristic = asTheCrowFlies,
             starting = (0, 0), to = (2, 2),
             equals = [] )
 
     test "Short example":
-        assert(
+        assert[float](
             grid(". * .",
                  ". # .",
                  ". . ."),
+            heuristic = asTheCrowFlies,
             starting = (0, 0), to = (2, 2),
             equals = "v v > >")
 
     test "Complex example":
-        assert(
+        assert[float](
             grid(". . . . . . . . . .",
                  ". . . . * * . . . .",
                  ". . . . * * * . . .",
@@ -155,7 +166,24 @@ suite "A* should":
                  ". # # # * * * . . .",
                  ". # # # * * . . . .",
                  ". . . . . . . . . ."),
+            heuristic = asTheCrowFlies,
             starting = (1, 4), to = (8, 5),
             equals = "> ^ > ^ ^ ^ > > > v > v > v v v" )
+
+    test "Complex example using a manhatten distance":
+        assert[int](
+            grid(". . . . . . . . . .",
+                 ". . . . * * . . . .",
+                 ". . . . * * * . . .",
+                 ". . . . * * * * . .",
+                 ". . . * * * * * . .",
+                 ". . . * * * * * . .",
+                 ". . . . * * * . . .",
+                 ". # # # * * * . . .",
+                 ". # # # * * . . . .",
+                 ". . . . . . . . . ."),
+            heuristic = manhattan,
+            starting = (1, 4), to = (8, 5),
+            equals = "> ^ > ^ ^ ^ > > > > > v v v v v" )
 
 
