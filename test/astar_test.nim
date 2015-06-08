@@ -78,10 +78,10 @@ proc str( title: string, grid: Grid, path: openArray[XY] ): string =
 
 proc assert[T](
     within: Grid, starting: XY, to: XY, equals: openArray[XY],
-    heuristic: proc (a, b: XY): T
+    heuristic: proc (a, b: XY): T, cost: proc (grid: Grid, a, b: XY): T
 ) =
     ## Asserts a path is created across the given grid
-    let astar = newAStar[Grid, XY, T](within, heuristic)
+    let astar = newAStar[Grid, XY, T](within, heuristic, cost)
     let path = toSeq( path[Grid, XY, T](astar, starting, to) )
     checkpoint( str("Actual", within, path) )
     checkpoint( str("Expected", within, equals) )
@@ -103,9 +103,9 @@ proc walk( start: XY, directions: string ): seq[XY] =
 
 proc assert[T](
     within: Grid, starting: XY, to: XY, equals: string,
-    heuristic: proc (a, b: XY): T
+    heuristic: proc (a, b: XY): T, cost: proc (grid: Grid, a, b: XY): T
 ) =
-    assert[T]( within, starting, to, walk(starting, equals), heuristic )
+    assert[T]( within, starting, to, walk(starting, equals), heuristic, cost )
 
 
 suite "A* should":
@@ -116,6 +116,7 @@ suite "A* should":
                  ". . .",
                  ". . ."),
             heuristic = asTheCrowFlies,
+            cost = cost,
             starting = (0, 0), to = (0, 0),
             equals = [(0, 0)] )
 
@@ -125,6 +126,7 @@ suite "A* should":
                  ". . .",
                  ". . ."),
             heuristic = asTheCrowFlies,
+            cost = cost,
             starting = (0, 0), to = (1, 0),
             equals = [ (0, 0), (1, 0) ] )
 
@@ -134,6 +136,7 @@ suite "A* should":
                  ". . #",
                  ". . ."),
             heuristic = asTheCrowFlies,
+            cost = cost,
             starting = (0, 0), to = (2, 1),
             equals = [] )
 
@@ -142,6 +145,7 @@ suite "A* should":
                  "# # .",
                  ". . ."),
             heuristic = asTheCrowFlies,
+            cost = cost,
             starting = (0, 0), to = (2, 2),
             equals = [] )
 
@@ -151,39 +155,45 @@ suite "A* should":
                  ". # .",
                  ". . ."),
             heuristic = asTheCrowFlies,
+            cost = cost,
             starting = (0, 0), to = (2, 2),
             equals = "v v > >")
 
+
+    let complexGrid = grid(
+        ". . . . . . . . . .",
+        ". . . . * * . . . .",
+        ". . . . * * * . . .",
+        ". . . . * * * * . .",
+        ". . . * * * * * . .",
+        ". . . * * * * * . .",
+        ". . . . * * * . . .",
+        ". # # # * * * . . .",
+        ". # # # * * . . . .",
+        ". . . . . . . . . .")
+
     test "Complex example":
         assert[float](
-            grid(". . . . . . . . . .",
-                 ". . . . * * . . . .",
-                 ". . . . * * * . . .",
-                 ". . . . * * * * . .",
-                 ". . . * * * * * . .",
-                 ". . . * * * * * . .",
-                 ". . . . * * * . . .",
-                 ". # # # * * * . . .",
-                 ". # # # * * . . . .",
-                 ". . . . . . . . . ."),
+            within = complexGrid,
             heuristic = asTheCrowFlies,
+            cost = cost,
             starting = (1, 4), to = (8, 5),
             equals = "> ^ > ^ ^ ^ > > > v > v > v v v" )
 
-    test "Complex example using a manhatten distance":
+    test "Using a manhatten distance":
         assert[int](
-            grid(". . . . . . . . . .",
-                 ". . . . * * . . . .",
-                 ". . . . * * * . . .",
-                 ". . . . * * * * . .",
-                 ". . . * * * * * . .",
-                 ". . . * * * * * . .",
-                 ". . . . * * * . . .",
-                 ". # # # * * * . . .",
-                 ". # # # * * . . . .",
-                 ". . . . . . . . . ."),
+            within = complexGrid,
             heuristic = manhattan,
+            cost = cost,
             starting = (1, 4), to = (8, 5),
             equals = "> ^ > ^ ^ ^ > > > > > v v v v v" )
+
+    test "Swapping out the cost algorithm":
+        assert[float](
+            within = complexGrid,
+            heuristic = asTheCrowFlies,
+            cost = proc ( grid: Grid, a, b: XY ): float = cost(grid, a, b) / 4,
+            starting = (1, 4), to = (8, 5),
+            equals = "> v v > > > > > > ^" )
 
 

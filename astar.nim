@@ -24,9 +24,6 @@ type
         neighbors(g, Node) is iterator Node ## \
             ## Allows iteration over the neighbors of a node in the graph
 
-        cost(g, Node, Node) is Distance ## \
-            ## Returns the cost of moving from one node  to the next
-
     AStar* [G, N, D] = object ## \
         ## The configured A* interface \
         ## `G` is the type for the overall graph
@@ -36,16 +33,20 @@ type
         graph: G ## \
             ## The graph being traversed
 
+        cost: proc ( grid: G, a, b: N ): D ## \
+            ## Returns the cost of moving from one node to another
+
         heuristic: proc (a, b: N): D ## \
             ## Estimates the distance between two nodes in the graph
 
 
 proc newAStar*[G: Graph, N: Node, D: Distance](
     graph: G,
-    heuristic: proc(a, b: N): D
+    heuristic: proc(a, b: N): D,
+    cost: proc ( grid: G, a, b: N ): D
 ): AStar[G, N, D] =
     ## Creates a new AStar instance
-    result = AStar[G, N, D]( graph: graph, heuristic: heuristic )
+    result = AStar[G, N, D]( graph: graph, heuristic: heuristic, cost: cost )
 
 
 type
@@ -107,7 +108,7 @@ iterator path*[G: Graph, N: Node, D: Distance](
         for next in astar.graph.neighbors(current.node):
 
             # The intrinsic cost of moving into this node
-            let nodeCost = D( astar.graph.cost(current.node, next) )
+            let nodeCost = astar.cost(astar.graph, current.node, next)
 
             # Adding current cost lets us track the total it took to get here
             let cost = currentCost + nodeCost
