@@ -68,9 +68,8 @@ iterator backtrack[N]( cameFrom: Table[N, CameFrom[N]], start, goal: N ): N =
         path.add(current)
         current = `[]`(cameFrom, current).node
 
-    if path.len > 0:
-        for i in (path.len - 1)..0:
-            yield path[i]
+    for i in countdown(path.len - 1, 0):
+        yield path[i]
 
 iterator path*[G: Graph, N: Node]( astar: AStar[G, N], start, goal: N ): N =
     ## Iterates over the nodes that connect the start and goal

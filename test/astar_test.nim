@@ -1,4 +1,4 @@
-import astar, unittest, sets, sequtils, strutils, ropes
+import astar, unittest, sets, sequtils, strutils, ropes, sets
 
 type
     Grid = object
@@ -15,6 +15,7 @@ proc grid( ascii: varargs[string] ): Grid =
             case point
             of ' ': discard
             of '.': row.add(0)
+            of '*': row.add(5)
             of '0'..'9': row.add(parseInt($point))
             else: row.add(-1)
         rows.add(row)
@@ -41,25 +42,36 @@ iterator neighbors*( grid: Grid, point: XY ): XY =
                 if grid.rows[adj.y][adj.x] >= 0:
                     yield adj
 
-proc `$`( grid: Grid ): string =
-    ## Converts a grid to a string
-    var str = rope("")
-    for row in grid.rows:
-        if str.len != 0:
-            str.add("\n")
-        for column in row:
-            if column < 0:
-                str.add("#")
-            elif column == 0:
-                str.add(".")
-            else:
-                str.add($column)
-            str.add(" ")
-    return $str
-
 proc `$`( point: XY ): string =
     ## Converts a point to a readable string
     return "(" & $point.x & ", " & $point.y & ")"
+
+proc str( title: string, grid: Grid, path: openArray[XY] ): string =
+    ## Converts a grid to a string
+
+    let pathPoints = toSet(path)
+
+    var str = rope(title)
+    str.add(":\n")
+
+    for y in countup(0, grid.rows.len - 1):
+        for x in countup(0, grid.rows.len - 1):
+            if pathPoints.contains( (x: x, y: y) ):
+                str.add("@")
+            elif grid.rows[y][x] < 0:
+                str.add("#")
+            elif grid.rows[y][x] == 5:
+                str.add("*")
+            elif grid.rows[y][x] == 0:
+                str.add(".")
+            else:
+                str.add($grid.rows[y][x])
+            str.add(" ")
+        str.add("\n")
+
+    str.add("Path:\n")
+    str.add(join(map(path, `$`), " -> "))
+    return $str
 
 proc createAStar( grid: Grid ): AStar[Grid, XY] =
     ## Creates an AStar instance prefilled to use a manhatten distance heuristic
@@ -70,10 +82,26 @@ proc assert( within: Grid, starting: XY, to: XY, equals: openArray[XY] ) =
     ## Asserts a path is created across the given grid
     let astar = createAStar(within)
     let path = toSeq( path[Grid, XY](astar, starting, to) )
-    checkpoint("Grid is:\n" & $within)
-    checkpoint("Expected: " & join(map(equals, `$`), " -> "))
-    checkpoint("Actual:   " & join(map(path, `$`), " -> "))
+    checkpoint( str("Actual", within, path) )
+    checkpoint( str("Expected", within, equals) )
     assert( path == @equals )
+
+proc walk( start: XY, directions: string ): seq[XY] =
+    ## Creates a sequence of points from a string of movements
+    result = @[ start ]
+    var current = start
+    for movement in directions:
+        case movement
+        of '<': current = (current.x - 1, current.y)
+        of '>': current = (current.x + 1, current.y)
+        of '^': current = (current.x, current.y - 1)
+        of 'v': current = (current.x, current.y + 1)
+        else: discard
+        if current != result[result.len - 1]:
+            result.add(current)
+
+proc assert( within: Grid, starting: XY, to: XY, equals: string ) =
+    assert( within, starting, to, walk(starting, equals) )
 
 
 suite "A* should":
@@ -108,4 +136,12 @@ suite "A* should":
                  ". . ."),
             starting = (0, 0), to = (2, 2),
             equals = [] )
+
+    test "Short example":
+        assert(
+            grid(". * .",
+                 ". # .",
+                 ". . ."),
+            starting = (0, 0), to = (2, 2),
+            equals = "v v > >")
 
