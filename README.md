@@ -28,6 +28,11 @@ So, to actually provide a graph there are three functions you need:
   so it can skip looking at obviously wrong nodes. There are two implementations
   provided by default: `asTheCrowFlies` and `manhattan`
 
+API Docs
+--------
+
+http://nycto.github.io/AStarNim/astar.html
+
 Full Example
 ------------
 
