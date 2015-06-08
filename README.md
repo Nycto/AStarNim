@@ -12,21 +12,29 @@ Usage
 -----
 
 This is a "Bring Your Own Graph" implementation. Meaning, this implementation
-relies on you to have your data already organized in a graph. This library will
-then call your functions and pluck out the edges of your graph.
+relies on your own graph implementation. This library will then call your
+functions and pluck out the edges of your graph.
 
-This was done to avoid copying. In most cases, the data is already represented
-in a data structure somewhere. Having to copy it over to yet another location
-just doesn't make any sense.
+This was done to avoid needless data copying. In most cases, your data will
+already be represented in a data structure somewhere. Having to keep two
+parallel copies in place doesn't make sense in this case.
 
-So, to actually provide a graph there are three functions you need:
+So, to actually hook your graph into this algorithm, there are three functions
+you need:
 
 * `neighbors`: An iterator that returns the neighbors of a node
 * `cost`: A proc that returns the cost of moving to a function
-* `heuristic`: A function that determines the priority of a node. This is the
-  real magic of A-Star; the heuristic determines which nodes are looked at first
-  so it can skip looking at obviously wrong nodes. There are two implementations
-  provided by default: `asTheCrowFlies` and `manhattan`
+* `heuristic`: A proc that determines the priority of a node. This is the real
+  magic of A-Star; the heuristic determines which nodes are looked at first so
+  it can skip looking at obviously wrong nodes. There are two implementations
+  provided by default: `asTheCrowFlies` and `manhattan`. See the API docs for
+  more information.
+
+Example code is provided below. What you'll notice is that the code required to
+get a grid up and running takes longer than actually using the algorithm. As
+mentioned before, this is on purpose. Odds are that you will have already done
+this work for some other part of your application, so this disappears in the
+real world.
 
 API Docs
 --------
@@ -40,13 +48,33 @@ Full Example
 import astar
 
 type
-    # A grid of nodes. Each number represents the cost of movign to that node
     Grid = seq[seq[int]]
+        ## A matrix of nodes. Each cell is the cost of moving to that node
 
-    # A point within that grid
     Point = tuple[x, y: int]
+        ## A point within that grid
 
-# A sample grid
+template yieldIfExists( grid: Grid, point: Point ) =
+    ## Checks if a point exists within a grid, then calls yield it if it does
+    let exists =
+        point.y >= 0 and point.y < grid.len and
+        point.x >= 0 and point.x < grid[point.y].len and
+        grid[point.y][point.x] >= 0
+    if exists:
+        yield point
+
+iterator neighbors*( grid: Grid, point: Point ): Point =
+    ## An iterator that yields the neighbors of a given point
+    yieldIfExists( grid, (x: point.x - 1, y: point.y) )
+    yieldIfExists( grid, (x: point.x + 1, y: point.y) )
+    yieldIfExists( grid, (x: point.x, y: point.y - 1) )
+    yieldIfExists( grid, (x: point.x, y: point.y + 1) )
+
+proc cost*(grid: Grid, a, b: Point): float {.procvar.}=
+    ## Returns the cost of moving from point `a` to point `b`
+    return float(grid[a.y][a.x])
+
+# A sample grid. Each number represents the cost of moving to that space
 let grid = @[
     @[ 0, 0, 0, 0, 0 ],
     @[ 0, 3, 3, 3, 0 ],
@@ -55,30 +83,12 @@ let grid = @[
     @[ 0, 0, 0, 0, 0 ]
 ]
 
-# Checks if a point exists within that grid
-proc exists( grid: Grid, point: Point ): bool =
-    return point.y >= 0 and point.y < grid.len and
-        point.x >= 0 and point.x < grid[point.y].len
+# Configure the A* pathfinder. Notice that we pass in the heuristic (in this
+# case `asTheCrowFlies`) and the cost.
+let pathfinder = newAStar[Grid, Point, float](grid, asTheCrowFlies, cost)
 
-# An iterator that yields the edges of a given point
-iterator neighbors*( grid: Grid, point: Point ): Point =
-    let adjacent = [
-        (x: point.x - 1, y: point.y),
-        (x: point.x + 1, y: point.y),
-        (x: point.x, y: point.y - 1),
-        (x: point.x, y: point.y + 1)
-    ]
-    for adj in adjacent:
-        if exists(grid, adj):
-            yield adj
-
-let pathfinder = newAStar[Grid, Point, int](
-    grid, manhattan,
-    proc (grid: Grid, a, b: Point): int =
-        return grid[a.y][a.x]
-)
-
-for point in path[Grid, Point, int]( pathfinder, (x: 0, y: 3), (x: 4, y: 3) ):
+# Pass in the start and end points and iterate over the results.
+for point in path[Grid, Point, float]( pathfinder, (x: 0, y: 3), (x: 4, y: 3) ):
     echo point
 ```
 
