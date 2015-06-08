@@ -76,13 +76,9 @@ proc str( title: string, grid: Grid, path: openArray[XY] ): string =
 
     return $str
 
-proc createAStar( grid: Grid ): AStar[Grid, XY, float] =
-    ## Creates an AStar instance prefilled to use a manhatten distance heuristic
-    return newAStar[Grid, XY, float](grid, asTheCrowFlies)
-
 proc assert( within: Grid, starting: XY, to: XY, equals: openArray[XY] ) =
     ## Asserts a path is created across the given grid
-    let astar = createAStar(within)
+    let astar = newAStar[Grid, XY, float](within, asTheCrowFlies)
     let path = toSeq( path[Grid, XY, float](astar, starting, to) )
     checkpoint( str("Actual", within, path) )
     checkpoint( str("Expected", within, equals) )
