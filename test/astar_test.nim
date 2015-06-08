@@ -23,19 +23,21 @@ proc cost[T]( grid: Grid, a, b: XY ): T =
     ## Returns the cost associated with moving to a point
     return T( grid[b.y][b.x] )
 
+template yieldIfExists( grid: Grid, point: XY ) =
+    ## Checks if a point exists within a grid, then yields it if it does
+    let isValid =
+        point.y >= 0 and point.y < grid.len and
+        point.x >= 0 and point.x < grid[point.y].len and
+        grid[point.y][point.x] >= 0
+    if isValid:
+        yield point
+
 iterator neighbors*( grid: Grid, point: XY ): XY =
     ## Yields the connected neighbors of a point
-    let adjacent = [
-        (x: point.x - 1, y: point.y),
-        (x: point.x + 1, y: point.y),
-        (x: point.x, y: point.y - 1),
-        (x: point.x, y: point.y + 1)
-    ]
-    for adj in adjacent:
-        if adj.y >= 0 and adj.y < grid.len:
-            if adj.x >= 0 and adj.x < grid[adj.y].len:
-                if grid[adj.y][adj.x] >= 0:
-                    yield adj
+    yieldIfExists( grid, (x: point.x - 1, y: point.y) )
+    yieldIfExists( grid, (x: point.x + 1, y: point.y) )
+    yieldIfExists( grid, (x: point.x, y: point.y - 1) )
+    yieldIfExists( grid, (x: point.x, y: point.y + 1) )
 
 proc `$`( point: XY ): string =
     ## Converts a point to a readable string
