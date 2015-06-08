@@ -1,4 +1,4 @@
-import astar, unittest, sets, sequtils, strutils, ropes, sets
+import astar, unittest, sets, sequtils, strutils, ropes, sets, math
 
 type
     Grid = object
@@ -21,9 +21,9 @@ proc grid( ascii: varargs[string] ): Grid =
         rows.add(row)
     return Grid(rows: rows)
 
-proc cost( grid: Grid, a, b: XY ): int =
+proc cost( grid: Grid, a, b: XY ): float =
     ## Returns the cost associated with moving to a point
-    return grid.rows[b.y][b.x]
+    return float(grid.rows[b.y][b.x])
 
 proc isValid( grid: Grid, point: XY ): bool =
     ## Returns whether a point exists in this grid
@@ -73,15 +73,17 @@ proc str( title: string, grid: Grid, path: openArray[XY] ): string =
     str.add(join(map(path, `$`), " -> "))
     return $str
 
-proc createAStar( grid: Grid ): AStar[Grid, XY] =
+proc createAStar( grid: Grid ): AStar[Grid, XY, float] =
     ## Creates an AStar instance prefilled to use a manhatten distance heuristic
-    return newAStar[Grid, XY](grid) do (a, b: XY) -> int:
-        return abs(a.x - b.x) + abs(a.y - b.y)
+    return newAStar[Grid, XY, float](grid) do (a, b: XY) -> float:
+        return sqrt(
+            pow(float(a.x) - float(b.x), 2) +
+            pow(float(a.y) - float(b.y), 2) )
 
 proc assert( within: Grid, starting: XY, to: XY, equals: openArray[XY] ) =
     ## Asserts a path is created across the given grid
     let astar = createAStar(within)
-    let path = toSeq( path[Grid, XY](astar, starting, to) )
+    let path = toSeq( path[Grid, XY, float](astar, starting, to) )
     checkpoint( str("Actual", within, path) )
     checkpoint( str("Expected", within, equals) )
     assert( path == @equals )
@@ -144,4 +146,20 @@ suite "A* should":
                  ". . ."),
             starting = (0, 0), to = (2, 2),
             equals = "v v > >")
+
+    test "Complex example":
+        assert(
+            grid(". . . . . . . . . .",
+                 ". . . . * * . . . .",
+                 ". . . . * * * . . .",
+                 ". . . . * * * * . .",
+                 ". . . * * * * * . .",
+                 ". . . * * * * * . .",
+                 ". . . . * * * . . .",
+                 ". # # # * * * . . .",
+                 ". # # # * * . . . .",
+                 ". . . . . . . . . ."),
+            starting = (1, 4), to = (8, 5),
+            equals = "> ^ > ^ ^ ^ > > > v > v > v v v" )
+
 
