@@ -136,10 +136,8 @@ iterator path*[G: Graph, N: Node, D: Distance](
     proc compareNodes(a, b: FrontierElem[N, D]): int =
         ## Compares two nodes and sorts them based on which should be examined
         ## first as a potential route
-        return cmp(a.priority, b.priority)
-        # FIXME: This causes the lambda lifting error
-        #let cmpd = cmp(a.priority, b.priority)
-        #return if cmpd == 0: astar.tiebreaker(a.node, b.node) else: cmpd
+        let cmpd = cmp(a.priority, b.priority)
+        return if cmpd == 0: astar.tiebreaker(a.node, b.node) else: cmpd
 
     # The frontier is the list of nodes we need to visit, sorted by a
     # combination of cost and how far we estimate them to be from the goal
