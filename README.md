@@ -58,8 +58,7 @@ template yieldIfExists( grid: Grid, point: Point ) =
     ## Checks if a point exists within a grid, then calls yield it if it does
     let exists =
         point.y >= 0 and point.y < grid.len and
-        point.x >= 0 and point.x < grid[point.y].len and
-        grid[point.y][point.x] >= 0
+        point.x >= 0 and point.x < grid[point.y].len
     if exists:
         yield point
 
