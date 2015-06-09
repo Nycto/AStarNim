@@ -14,6 +14,8 @@ proc grid( ascii: varargs[string] ): Grid =
             case point
             of ' ': discard
             of '.': row.add(0)
+            of '`': row.add(1)
+            of '-': row.add(2)
             of '*': row.add(5)
             of '0'..'9': row.add(parseInt($point))
             else: row.add(-1)
@@ -52,18 +54,18 @@ proc str( title: string, grid: Grid, path: openArray[XY] ): string =
     str.add(":\n")
 
     for y in countup(0, grid.len - 1):
-        for x in countup(0, grid.len - 1):
+        for x in countup(0, grid[y].len - 1):
             if pathPoints.contains( (x: x, y: y) ):
                 str.add("@")
             elif grid[y][x] < 0:
                 str.add("#")
-            elif grid[y][x] == 5:
-                str.add("*")
-            elif grid[y][x] == 0:
-                str.add(".")
             else:
-                str.add($grid[y][x])
-            str.add(" ")
+                case grid[y][x]
+                of 0: str.add(".")
+                of 1: str.add("`")
+                of 2: str.add("-")
+                of 5: str.add("*")
+                else: str.add($grid[y][x])
         str.add("\n")
 
     str.add("Path:")
@@ -83,8 +85,8 @@ proc assert[T](
     ## Asserts a path is created across the given grid
     let astar = newAStar[Grid, XY, T](within, heuristic, cost)
     let path = toSeq( path[Grid, XY, T](astar, starting, to) )
-    checkpoint( str("Actual", within, path) )
     checkpoint( str("Expected", within, equals) )
+    checkpoint( str("Actual", within, path) )
     assert( path == @equals )
 
 proc walk( start: XY, directions: string ): seq[XY] =
@@ -210,5 +212,4 @@ suite "A* should":
             cost = cost,
             starting = (1, 1), to = (3, 6),
             equals = "v v > > > v v v <" )
-
 
