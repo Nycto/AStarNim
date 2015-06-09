@@ -42,6 +42,12 @@ type
         cost: proc ( grid: G, a, b: N ): D
         heuristic: proc (a, b: N): D
 
+    Point* = concept p
+        ## An X/Y Coordinate. This isn't used by the A-Star algorithm itself,
+        ## but by the built in heuristic procs.
+        p.x is Distance
+        p.y is Distance
+
 
 proc newAStar*[G: Graph, N: Node, D: Distance](
     graph: G,
@@ -130,13 +136,6 @@ iterator path*[G: Graph, N: Node, D: Distance](
                     node: next,
                     priority: cost + astar.heuristic(next, goal)
                 ))
-
-type
-    Point* = concept p
-        ## An X/Y Coordinate. This isn't used by the A-Star algorithm itself,
-        ## but by the built in heuristic procs.
-        p.x is Distance
-        p.y is Distance
 
 proc asTheCrowFlies*( a, b: Point ): float {.procvar.} =
     ## A convenience function that measures the exact distance between two
