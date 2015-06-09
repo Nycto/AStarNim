@@ -49,6 +49,27 @@ type
         p.y is Distance
 
 
+proc asTheCrowFlies*( a, b: Point ): float {.procvar.} =
+    ## A convenience function that measures the exact distance between two
+    ## points. This is meant to be used as the heuristic when creating a new
+    ## `AStar` instance.
+    return sqrt(
+        pow(float(a.x) - float(b.x), 2) +
+        pow(float(a.y) - float(b.y), 2) )
+
+proc manhattan*(a, b: Point): auto {.procvar.} =
+    ## A convenience function that measures the manhattan distance between two
+    ## points. This is meant to be used as the heuristic when creating a new
+    ## `AStar` instance.
+    return abs(a.x - b.x) + abs(a.y - b.y)
+
+proc chebyshev*(a, b: Point): auto {.procvar.} =
+    ## A convenience function that measures the chebyshev distance between two
+    ## points. This is also known as the diagonal distance. This is meant to be
+    ## used as the heuristic when creating a new `AStar` instance.
+    return max(abs(a.x - b.x), abs(a.y - b.y))
+
+
 proc newAStar*[G: Graph, N: Node, D: Distance](
     graph: G,
     heuristic: proc(a, b: N): D,
@@ -136,24 +157,4 @@ iterator path*[G: Graph, N: Node, D: Distance](
                     node: next,
                     priority: cost + astar.heuristic(next, goal)
                 ))
-
-proc asTheCrowFlies*( a, b: Point ): float {.procvar.} =
-    ## A convenience function that measures the exact distance between two
-    ## points. This is meant to be used as the heuristic when creating a new
-    ## `AStar` instance.
-    return sqrt(
-        pow(float(a.x) - float(b.x), 2) +
-        pow(float(a.y) - float(b.y), 2) )
-
-proc manhattan*(a, b: Point): auto {.procvar.} =
-    ## A convenience function that measures the manhattan distance between two
-    ## points. This is meant to be used as the heuristic when creating a new
-    ## `AStar` instance.
-    return abs(a.x - b.x) + abs(a.y - b.y)
-
-proc chebyshev*(a, b: Point): auto {.procvar.} =
-    ## A convenience function that measures the chebyshev distance between two
-    ## points. This is also known as the diagonal distance. This is meant to be
-    ## used as the heuristic when creating a new `AStar` instance.
-    return max(abs(a.x - b.x), abs(a.y - b.y))
 
