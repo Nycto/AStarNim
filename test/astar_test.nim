@@ -196,4 +196,19 @@ suite "A* should":
             starting = (1, 4), to = (8, 5),
             equals = "> v v > > > > > > ^" )
 
+    test "Using a chebyshev distance":
+        assert[int](
+            grid(
+                ". . . . . . . ",
+                ". . . . * * . ",
+                ". . . . * * * ",
+                ". . . . 2 2 * ",
+                "# # # * 2 2 * ",
+                ". . . * * * * ",
+                ". . . . . . . "),
+            heuristic = chebyshev,
+            cost = cost,
+            starting = (1, 1), to = (3, 6),
+            equals = "v v > > > v v v <" )
+
 

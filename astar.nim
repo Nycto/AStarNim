@@ -152,3 +152,9 @@ proc manhattan*(a, b: Point): auto {.procvar.} =
     ## `AStar` instance.
     return abs(a.x - b.x) + abs(a.y - b.y)
 
+proc chebyshev*(a, b: Point): auto {.procvar.} =
+    ## A convenience function that measures the chebyshev distance between two
+    ## points. This is also known as the diagonal distance. This is meant to be
+    ## used as the heuristic when creating a new `AStar` instance.
+    return max(abs(a.x - b.x), abs(a.y - b.y))
+
