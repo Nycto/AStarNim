@@ -38,9 +38,12 @@ type
         ## * `graph`: is a reference to the graph being traversed
         ## * `cost`: Returns the cost of moving from one node to another
         ## * `heuristic`: Estimates the distance between two nodes in the graph
+        ## * `tiebreaker`: This function is called to choose between two points
+        ##   that seemingly have the same cost
         graph: G
         cost: proc ( grid: G, a, b: N ): D
         heuristic: proc (a, b: N): D
+        tiebreaker: proc (a, b: N): int
 
     Point* = concept p
         ## An X/Y Coordinate. This isn't used by the A-Star algorithm itself,
@@ -70,6 +73,24 @@ proc chebyshev*(a, b: Point): auto {.procvar.} =
     return max(abs(a.x - b.x), abs(a.y - b.y))
 
 
+proc hashTieBreaker*(a, b: auto): int {.procvar.} =
+    ## Given two nodes, this method deterministically chooses one
+    return cmp(hash(a), hash(b))
+
+
+proc newAStar*[G: Graph, N: Node, D: Distance](
+    graph: G,
+    heuristic: proc(a, b: N): D,
+    cost: proc ( grid: G, a, b: N ): D,
+    tiebreaker: proc (a, b: N): int
+): AStar[G, N, D] =
+    ## Creates a new AStar instance. See the `AStar` object above for a
+    ## description of types and parameters
+    result = AStar[G, N, D](
+        graph: graph, heuristic: heuristic,
+        cost: cost, tiebreaker: tiebreaker
+    )
+
 proc newAStar*[G: Graph, N: Node, D: Distance](
     graph: G,
     heuristic: proc(a, b: N): D,
@@ -77,7 +98,7 @@ proc newAStar*[G: Graph, N: Node, D: Distance](
 ): AStar[G, N, D] =
     ## Creates a new AStar instance. See the `AStar` object above for a
     ## description of types and parameters
-    result = AStar[G, N, D]( graph: graph, heuristic: heuristic, cost: cost )
+    return newAStar[G, N, D](graph, heuristic, cost, hashTieBreaker)
 
 
 type
@@ -112,11 +133,17 @@ iterator path*[G: Graph, N: Node, D: Distance](
     ## Executes the A-Star algorithm and iterates over the nodes that connect
     ## the start and goal
 
+    proc compareNodes(a, b: FrontierElem[N, D]): int =
+        ## Compares two nodes and sorts them based on which should be examined
+        ## first as a potential route
+        return cmp(a.priority, b.priority)
+        # FIXME: This causes the lambda lifting error
+        #let cmpd = cmp(a.priority, b.priority)
+        #return if cmpd == 0: astar.tiebreaker(a.node, b.node) else: cmpd
+
     # The frontier is the list of nodes we need to visit, sorted by a
     # combination of cost and how far we estimate them to be from the goal
-    var frontier =
-        newHeap[FrontierElem[N, D]] do (a, b: FrontierElem[N, D]) -> int:
-            return cmp(a.priority, b.priority)
+    var frontier = newHeap[FrontierElem[N, D]]( compareNodes )
 
     # Put the start node into the frontier so we have a place to kick off
     frontier.push( (node: start, priority: D(0)) )
