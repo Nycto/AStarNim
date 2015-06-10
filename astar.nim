@@ -72,8 +72,9 @@ proc chebyshev*(a, b: Point): auto {.procvar.} =
 proc onLineToGoal*[P: Point, D: Distance](
     weight: D, inner: proc (a, b: P): D
 ): proc (node, start, goal, cameFrom: P): D =
-    ## Modifies an inner heuristic to add weight to points that are closer to
-    ## the line from the start to the goal
+    ## Modifies another heuristic to add weight to points that are closer to
+    ## the line from the start to the goal. The proc returned from this proc is
+    ## meant to be used as the heuristic when creating a new `AStar` instance
     return proc (node, start, goal, cameFrom: P): D =
         let dx1 = node.x - goal.x
         let dy1 = node.y - goal.y
