@@ -37,10 +37,10 @@ type
         ##   `Distance` above.
         ## * `graph`: is a reference to the graph being traversed
         ## * `cost`: Returns the cost of moving from one node to another
-        ## * `heuristic`: Estimates the distance between two nodes in the graph
+        ## * `heuristic`: Estimates the distance between a node and the goal
         graph: G
         cost: proc ( grid: G, a, b: N ): D
-        heuristic: proc (a, b: N): D
+        heuristic: proc (node, start, goal, cameFrom: N): D
 
     Point* = concept p
         ## An X/Y Coordinate. This isn't used by the A-Star algorithm itself,
@@ -72,12 +72,26 @@ proc chebyshev*(a, b: Point): auto {.procvar.} =
 
 proc newAStar*[G: Graph, N: Node, D: Distance](
     graph: G,
-    heuristic: proc(a, b: N): D,
+    heuristic: proc (node, start, goal, cameFrom: N): D,
     cost: proc ( grid: G, a, b: N ): D
 ): AStar[G, N, D] =
     ## Creates a new AStar instance. See the `AStar` object above for a
     ## description of types and parameters
     result = AStar[G, N, D]( graph: graph, heuristic: heuristic, cost: cost )
+
+proc newAStar*[G: Graph, N: Node, D: Distance](
+    graph: G,
+    heuristic: proc(node, goal: N): D,
+    cost: proc ( grid: G, a, b: N ): D
+): AStar[G, N, D] =
+    ## Creates a new AStar instance. See the `AStar` object above for a
+    ## description of types and parameters
+    return newAStar[G, N, D](
+        graph = graph,
+        cost = cost,
+        heuristic = proc (node, start, goal, cameFrom: N): D =
+            return heuristic(node, goal)
+    )
 
 
 type
@@ -155,6 +169,7 @@ iterator path*[G: Graph, N: Node, D: Distance](
                 # Also add it to the frontier so we check out its neighbors
                 frontier.push((
                     node: next,
-                    priority: cost + astar.heuristic(next, goal)
+                    priority: cost +
+                        astar.heuristic(next, start, goal, current.node)
                 ))
 

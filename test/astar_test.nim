@@ -218,3 +218,17 @@ suite "A* should":
             equals = "v v > > > v v v <",
             distance = int)
 
+    test "Complex heuristic":
+
+        proc weight (node, start, goal, cameFrom: XY): float {.procvar.}=
+            result = asTheCrowFlies(node, goal)
+            if cameFrom.x == node.x:
+                result = result * 1.5
+
+        assert(
+            within = complexGrid,
+            heuristic = weight,
+            cost = cost,
+            starting = (1, 4), to = (8, 5),
+            equals = "> ^ > ^ ^ ^ > > > > > v v v v v" )
+
