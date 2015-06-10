@@ -69,6 +69,19 @@ proc chebyshev*(a, b: Point): auto {.procvar.} =
     ## used as the heuristic when creating a new `AStar` instance.
     return max(abs(a.x - b.x), abs(a.y - b.y))
 
+proc onLineToGoal*[P: Point, D: Distance](
+    weight: D, inner: proc (a, b: P): D
+): proc (node, start, goal, cameFrom: P): D =
+    ## Modifies an inner heuristic to add weight to points that are closer to
+    ## the line from the start to the goal
+    return proc (node, start, goal, cameFrom: P): D =
+        let dx1 = node.x - goal.x
+        let dy1 = node.y - goal.y
+        let dx2 = start.x - goal.x
+        let dy2 = start.y - goal.y
+        let crossProduct = D( abs(dx1 * dy2 - dx2 * dy1) )
+        return inner(node, goal) + (weight * crossProduct)
+
 
 proc newAStar*[G: Graph, N: Node, D: Distance](
     graph: G,

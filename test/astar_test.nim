@@ -232,3 +232,18 @@ suite "A* should":
             starting = (1, 4), to = (8, 5),
             equals = "> ^ > ^ ^ ^ > > > > > v v v v v" )
 
+    test "onLineToGoal":
+        assert(
+            within = grid(
+                ". . . . . . . . . . . . . .",
+                ". . . . . . . . . . . . . .",
+                ". . . . . . . . . . . . . .",
+                ". . . . . . . . . . . . . .",
+                ". . . . . . . . . . . . . .",
+                ". . . . . . . . . . . . . .",
+                ". . . . . . . . . . . . . ."),
+            heuristic = onLineToGoal[XY, float](1.5, asTheCrowFlies),
+            cost = cost,
+            starting = (1, 1), to = (12, 5),
+            equals = "> v > > > v > > > v > > > v >" )
+
