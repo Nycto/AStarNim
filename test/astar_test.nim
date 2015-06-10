@@ -78,13 +78,13 @@ proc str( title: string, grid: Grid, path: openArray[XY] ): string =
 
     return $str
 
-proc assert[T](
+template assert(
     within: Grid, starting: XY, to: XY, equals: openArray[XY],
-    heuristic: proc (a, b: XY): T, cost: proc (grid: Grid, a, b: XY): T
+    heuristic: expr, cost: expr, distance: typedesc = float
 ) =
     ## Asserts a path is created across the given grid
-    let astar = newAStar[Grid, XY, T](within, heuristic, cost)
-    let path = toSeq( path[Grid, XY, T](astar, starting, to) )
+    let astar = newAStar[Grid, XY, distance](within, heuristic, cost)
+    let path = toSeq( path[Grid, XY, distance](astar, starting, to) )
     checkpoint( str("Expected", within, equals) )
     checkpoint( str("Actual", within, path) )
     assert( path == @equals )
@@ -103,17 +103,20 @@ proc walk( start: XY, directions: string ): seq[XY] =
         if current != result[result.len - 1]:
             result.add(current)
 
-proc assert[T](
+template assert(
     within: Grid, starting: XY, to: XY, equals: string,
-    heuristic: proc (a, b: XY): T, cost: proc (grid: Grid, a, b: XY): T
+    heuristic: expr, cost: expr, distance: typedesc = float
 ) =
-    assert[T]( within, starting, to, walk(starting, equals), heuristic, cost )
+    assert(
+        within, starting, to, walk(starting, equals),
+        heuristic, cost, distance
+    )
 
 
 suite "A* should":
 
     test "Yield a single point when goal == start":
-        assert[float](
+        assert(
             grid(". . .",
                  ". . .",
                  ". . ."),
@@ -123,7 +126,7 @@ suite "A* should":
             equals = [(0, 0)] )
 
     test "Yield two points for connected points":
-        assert[float](
+        assert(
             grid(". . .",
                  ". . .",
                  ". . ."),
@@ -133,7 +136,7 @@ suite "A* should":
             equals = [ (0, 0), (1, 0) ] )
 
     test "Yield nothing if the goal is unreachable":
-        assert[float](
+        assert(
             grid(". . .",
                  ". . #",
                  ". . ."),
@@ -142,7 +145,7 @@ suite "A* should":
             starting = (0, 0), to = (2, 1),
             equals = [] )
 
-        assert[float](
+        assert(
             grid(". # .",
                  "# # .",
                  ". . ."),
@@ -152,7 +155,7 @@ suite "A* should":
             equals = [] )
 
     test "Short example":
-        assert[float](
+        assert(
             grid(". * .",
                  ". # .",
                  ". . ."),
@@ -175,7 +178,7 @@ suite "A* should":
         ". . . . . . . . . .")
 
     test "Complex example":
-        assert[float](
+        assert(
             within = complexGrid,
             heuristic = asTheCrowFlies,
             cost = cost,
@@ -183,15 +186,16 @@ suite "A* should":
             equals = "> ^ > ^ ^ ^ > > > v > v > v v v" )
 
     test "Using a manhatten distance":
-        assert[int](
+        assert(
             within = complexGrid,
             heuristic = manhattan,
             cost = cost,
             starting = (1, 4), to = (8, 5),
-            equals = "> ^ > ^ ^ ^ > > > > > v v v v v" )
+            equals = "> ^ > ^ ^ ^ > > > > > v v v v v",
+            distance = int)
 
     test "Swapping out the cost algorithm":
-        assert[float](
+        assert(
             within = complexGrid,
             heuristic = asTheCrowFlies,
             cost = proc ( grid: Grid, a, b: XY ): float = cost(grid, a, b) / 4,
@@ -199,7 +203,7 @@ suite "A* should":
             equals = "> v v > > > > > > ^" )
 
     test "Using a chebyshev distance":
-        assert[int](
+        assert(
             grid(
                 ". . . . . . . ",
                 ". . . . * * . ",
@@ -211,5 +215,6 @@ suite "A* should":
             heuristic = chebyshev,
             cost = cost,
             starting = (1, 1), to = (3, 6),
-            equals = "v v > > > v v v <" )
+            equals = "v v > > > v v v <",
+            distance = int)
 
