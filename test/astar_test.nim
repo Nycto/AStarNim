@@ -80,11 +80,10 @@ proc str( title: string, grid: Grid, path: openArray[XY] ): string =
 
 template assert(
     within: Grid, starting: XY, to: XY, equals: openArray[XY],
-    heuristic: expr, cost: expr, distance: typedesc = float
+    heuristic: expr, distance: typedesc = float
 ) =
     ## Asserts a path is created across the given grid
-    let astar = newAStar[Grid, XY, distance](within, heuristic, cost)
-    let path = toSeq( path[Grid, XY, distance](astar, starting, to) )
+    let path = toSeq(astar[Grid, XY, distance](within, starting, to, heuristic))
     checkpoint( str("Expected", within, equals) )
     checkpoint( str("Actual", within, path) )
     assert( path == @equals )
@@ -105,11 +104,11 @@ proc walk( start: XY, directions: string ): seq[XY] =
 
 template assert(
     within: Grid, starting: XY, to: XY, equals: string,
-    heuristic: expr, cost: expr, distance: typedesc = float
+    heuristic: expr, distance: typedesc = float
 ) =
     assert(
         within, starting, to, walk(starting, equals),
-        heuristic, cost, distance
+        heuristic, distance
     )
 
 
@@ -121,7 +120,6 @@ suite "A* should":
                  ". . .",
                  ". . ."),
             heuristic = asTheCrowFlies,
-            cost = cost,
             starting = (0, 0), to = (0, 0),
             equals = [(0, 0)] )
 
@@ -131,7 +129,6 @@ suite "A* should":
                  ". . .",
                  ". . ."),
             heuristic = asTheCrowFlies,
-            cost = cost,
             starting = (0, 0), to = (1, 0),
             equals = [ (0, 0), (1, 0) ] )
 
@@ -141,7 +138,6 @@ suite "A* should":
                  ". . #",
                  ". . ."),
             heuristic = asTheCrowFlies,
-            cost = cost,
             starting = (0, 0), to = (2, 1),
             equals = [] )
 
@@ -150,7 +146,6 @@ suite "A* should":
                  "# # .",
                  ". . ."),
             heuristic = asTheCrowFlies,
-            cost = cost,
             starting = (0, 0), to = (2, 2),
             equals = [] )
 
@@ -160,7 +155,6 @@ suite "A* should":
                  ". # .",
                  ". . ."),
             heuristic = asTheCrowFlies,
-            cost = cost,
             starting = (0, 0), to = (2, 2),
             equals = "v v > >")
 
@@ -181,7 +175,6 @@ suite "A* should":
         assert(
             within = complexGrid,
             heuristic = asTheCrowFlies,
-            cost = cost,
             starting = (1, 4), to = (8, 5),
             equals = "> ^ > ^ ^ ^ > > > v > v > v v v" )
 
@@ -189,18 +182,9 @@ suite "A* should":
         assert(
             within = complexGrid,
             heuristic = manhattan,
-            cost = cost,
             starting = (1, 4), to = (8, 5),
             equals = "> ^ > ^ ^ ^ > > > > > v v v v v",
             distance = int)
-
-    test "Swapping out the cost algorithm":
-        assert(
-            within = complexGrid,
-            heuristic = asTheCrowFlies,
-            cost = proc ( grid: Grid, a, b: XY ): float = cost(grid, a, b) / 4,
-            starting = (1, 4), to = (8, 5),
-            equals = "> v v > > > > > > ^" )
 
     test "Using a chebyshev distance":
         assert(
@@ -213,7 +197,6 @@ suite "A* should":
                 ". . . * * * * ",
                 ". . . . . . . "),
             heuristic = chebyshev,
-            cost = cost,
             starting = (1, 1), to = (3, 6),
             equals = "v v > > > v v v <",
             distance = int)
@@ -228,7 +211,6 @@ suite "A* should":
         assert(
             within = complexGrid,
             heuristic = weight,
-            cost = cost,
             starting = (1, 4), to = (8, 5),
             equals = "> ^ > ^ ^ ^ > > > > > v v v v v" )
 
@@ -243,7 +225,6 @@ suite "A* should":
                 ". . . . . . . . . . . . . .",
                 ". . . . . . . . . . . . . ."),
             heuristic = onLineToGoal[XY, float](1.5, asTheCrowFlies),
-            cost = cost,
             starting = (1, 1), to = (12, 5),
             equals = "> v > > > v > > > v > > > v >" )
 

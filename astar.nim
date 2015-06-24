@@ -27,20 +27,9 @@ type
     Graph* = concept g
         ## The graph being traversed.
         ## * `nieghbors`: Iterates over the neighbors of a node in the graph
+        ## * `cost`: Returns the price for moving between two nodes
         neighbors(g, Node) is iterator Node
-
-    AStar* [G, N, D] = object
-        ## The configured A* interface.
-        ## * `[G]`: The type for the overall graph
-        ## * `[N]`: The type of element that represents nodes in the graph
-        ## * `[D]`: The numeric type to use for costs and the heuristic. See
-        ##   `Distance` above.
-        ## * `graph`: is a reference to the graph being traversed
-        ## * `cost`: Returns the cost of moving from one node to another
-        ## * `heuristic`: Estimates the distance between a node and the goal
-        graph: G
-        cost: proc ( grid: G, a, b: N ): D
-        heuristic: proc (node, start, goal, cameFrom: N): D
+        cost(g, Node, Node) is Distance
 
     Point* = concept p
         ## An X/Y Coordinate. This isn't used by the A-Star algorithm itself,
@@ -84,30 +73,6 @@ proc onLineToGoal*[P: Point, D: Distance](
         return inner(node, goal) + (weight * crossProduct)
 
 
-proc newAStar*[G: Graph, N: Node, D: Distance](
-    graph: G,
-    heuristic: proc (node, start, goal, cameFrom: N): D,
-    cost: proc ( grid: G, a, b: N ): D
-): AStar[G, N, D] =
-    ## Creates a new AStar instance. See the `AStar` object above for a
-    ## description of types and parameters
-    result = AStar[G, N, D]( graph: graph, heuristic: heuristic, cost: cost )
-
-proc newAStar*[G: Graph, N: Node, D: Distance](
-    graph: G,
-    heuristic: proc(node, goal: N): D,
-    cost: proc ( grid: G, a, b: N ): D
-): AStar[G, N, D] =
-    ## Creates a new AStar instance. See the `AStar` object above for a
-    ## description of types and parameters
-    return newAStar[G, N, D](
-        graph = graph,
-        cost = cost,
-        heuristic = proc (node, start, goal, cameFrom: N): D =
-            return heuristic(node, goal)
-    )
-
-
 type
     FrontierElem[N, D] = tuple[node: N, priority: D]
         ## Internally used to associate a graph node with how much it costs
@@ -134,9 +99,9 @@ iterator backtrack[N, D](
     for i in countdown(path.len - 1, 0):
         yield path[i]
 
-iterator path*[G: Graph, N: Node, D: Distance](
-    astar: AStar[G, N, D], start, goal: N
-): N =
+template astarAlgo[G: Graph, N: Node, D: Distance](
+    heuristic: expr
+): N {.immediate.} =
     ## Executes the A-Star algorithm and iterates over the nodes that connect
     ## the start and goal
 
@@ -154,7 +119,7 @@ iterator path*[G: Graph, N: Node, D: Distance](
     var cameFrom = initTable[N, CameFrom[N, D]]()
 
     while frontier.size > 0:
-        let current = frontier.pop
+        let current {.inject.} = frontier.pop
 
         # Now that we have a map of back-references, yield the path back out to
         # the caller
@@ -165,10 +130,10 @@ iterator path*[G: Graph, N: Node, D: Distance](
 
         let currentCost = `[]`(cameFrom, current.node).cost
 
-        for next in astar.graph.neighbors(current.node):
+        for next {.inject.} in graph.neighbors(current.node):
 
             # The intrinsic cost of moving into this node
-            let nodeCost = astar.cost(astar.graph, current.node, next)
+            let nodeCost: D = D( graph.cost(current.node, next) )
 
             # Adding current cost lets us track the total it took to get here
             let cost = currentCost + nodeCost
@@ -180,10 +145,24 @@ iterator path*[G: Graph, N: Node, D: Distance](
                 # Add this node to the backtrack map
                 `[]=`(cameFrom, next, (node: current.node, cost: cost))
 
+                let estimate: D = heuristic
+
                 # Also add it to the frontier so we check out its neighbors
-                frontier.push((
-                    node: next,
-                    priority: cost +
-                        astar.heuristic(next, start, goal, current.node)
-                ))
+                frontier.push(( node: next, priority: cost + estimate ))
+
+iterator astar*[G: Graph, N: Node, D: Distance](
+    graph: G, start, goal: N,
+    heuristic: proc (node, goal: N): D
+): N =
+    ## Runs A* between two points against the given graph. Heuristic is passed
+    ## the current node and the goal
+    astarAlgo( heuristic(next, goal) )
+
+iterator astar*[G: Graph, N: Node, D: Distance](
+    graph: G, start, goal: N,
+    heuristic: proc (node, start, goal, cameFrom: N): D
+): N =
+    ## Runs A* between two points against the given graph. Heuristic is passed
+    ## the current node, the start, the goal, and the previous node
+    astarAlgo( heuristic(next, start, goal, current.node) )
 
