@@ -74,7 +74,7 @@ proc onLineToGoal*[P: Point, D: Distance](
 
 
 type
-    FrontierElem[N, D] = tuple[node: N, priority: D]
+    FrontierElem[N, D] = tuple[node: N, priority: D, cost: D]
         ## Internally used to associate a graph node with how much it costs
 
     CameFrom[N, D] = tuple[node: N, cost: D]
@@ -112,7 +112,7 @@ template astarAlgo[G: Graph, N: Node, D: Distance](
             return cmp(a.priority, b.priority)
 
     # Put the start node into the frontier so we have a place to kick off
-    frontier.push( (node: start, priority: D(0)) )
+    frontier.push( (node: start, priority: D(0), cost: D(0)) )
 
     # A map of backreferences. After getting to the goal, you use this to walk
     # backwards through the path and ultimately find the reverse path
@@ -128,15 +128,10 @@ template astarAlgo[G: Graph, N: Node, D: Distance](
                 yield node
             break
 
-        let currentCost = `[]`(cameFrom, current.node).cost
-
         for next {.inject.} in graph.neighbors(current.node):
 
-            # The intrinsic cost of moving into this node
-            let nodeCost: D = D( graph.cost(current.node, next) )
-
-            # Adding current cost lets us track the total it took to get here
-            let cost = currentCost + nodeCost
+            # The cost of moving into this node from the goal
+            let cost = current.cost + D( graph.cost(current.node, next) )
 
             # If we haven't seen this point already, or we found a cheaper
             # way to get to that
@@ -145,10 +140,11 @@ template astarAlgo[G: Graph, N: Node, D: Distance](
                 # Add this node to the backtrack map
                 `[]=`(cameFrom, next, (node: current.node, cost: cost))
 
-                let estimate: D = heuristic
+                # Estimate the priority of checking this node
+                let priority: D = cost + heuristic
 
                 # Also add it to the frontier so we check out its neighbors
-                frontier.push(( node: next, priority: cost + estimate ))
+                frontier.push( (next, priority, cost) )
 
 iterator astar*[G: Graph, N: Node, D: Distance](
     graph: G, start, goal: N,
