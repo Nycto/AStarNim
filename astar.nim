@@ -7,7 +7,7 @@
 ## http://www.redblobgames.com/pathfinding/a-star/introduction.html
 ##
 
-import binaryheap, tables, hashes, math
+import binaryheap, tables, hashes, math, optional_t
 
 type
     Distance* = int|float
@@ -72,6 +72,20 @@ proc onLineToGoal*[P: Point, D: Distance](
         let crossProduct = D( abs(dx1 * dy2 - dx2 * dy1) )
         return inner(node, goal) + (weight * crossProduct)
 
+proc straightLine*[P: Point, D: Distance](
+    weight: D, inner: proc (a, b: P): D
+): proc (node, start, goal, parent: P, grandparent: Option[P]): D =
+    ## Modifies another heuristic to add weight to paths with fewer bends.
+    ## The proc returned from this proc is meant to be used as the heuristic
+    ## when creating a new `AStar` instance
+    return proc (node, start, goal, parent: P, grandparent: Option[P]): D =
+        result = inner(node, goal)
+        if grandparent.isSome:
+            let gpNode = grandparent.get
+            if gpNode.x != node.x and gpNode.y != node.y:
+                result = result * weight
+
+
 
 type
     FrontierElem[N, D] = tuple[node: N, priority: D, cost: D]
@@ -116,7 +130,7 @@ template astarAlgo[G: Graph, N: Node, D: Distance](
 
     # A map of backreferences. After getting to the goal, you use this to walk
     # backwards through the path and ultimately find the reverse path
-    var cameFrom = initTable[N, CameFrom[N, D]]()
+    var cameFrom {.inject.} = initTable[N, CameFrom[N, D]]()
 
     while frontier.size > 0:
         let current {.inject.} = frontier.pop
@@ -161,4 +175,26 @@ iterator astar*[G: Graph, N: Node, D: Distance](
     ## Runs A* between two points against the given graph. Heuristic is passed
     ## the current node, the start, the goal, and the previous node
     astarAlgo( heuristic(next, start, goal, current.node) )
+
+iterator astar*[G: Graph, N: Node, D: Distance](
+    graph: G, start, goal: N,
+    heuristic: proc (node, start, goal, parent: N, grandparent: Option[N]): D
+): N =
+    ## Runs A* between two points against the given graph. Heuristic is passed
+    ## the current node, the start, the goal, the previous node, and the
+    ## node before that one (if it exists)
+
+    proc lookup(
+        cameFrom: Table[N, CameFrom[N, D]],
+        node: N
+    ): Option[N] {.inline.} =
+        if cameFrom.hasKey(node):
+            return Some[N]( `[]`(cameFrom, node).node )
+        else:
+            return None[N]()
+
+    astarAlgo(heuristic(
+        next, start, goal, current.node,
+        lookup(cameFrom, current.node)
+    ))
 

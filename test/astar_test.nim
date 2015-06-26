@@ -228,3 +228,10 @@ suite "A* should":
             starting = (1, 1), to = (12, 5),
             equals = "> v > > > v > > > v > > > v >" )
 
+    test "straightLine":
+        assert(
+            within = complexGrid,
+            heuristic = straightLine[XY, float](1.2, manhattan[XY, float]),
+            starting = (1, 4), to = (8, 2),
+            equals = "^ ^ > > ^ ^ > > > > > v v" )
+
