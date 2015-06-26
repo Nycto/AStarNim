@@ -113,7 +113,7 @@ iterator backtrack[N, D](
     for i in countdown(path.len - 1, 0):
         yield path[i]
 
-template astarAlgo[G: Graph, N: Node, D: Distance](
+template astarAlgo[N: Node, D: Distance](
     heuristic: expr
 ): N {.immediate.} =
     ## Executes the A-Star algorithm and iterates over the nodes that connect
