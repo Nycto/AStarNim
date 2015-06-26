@@ -38,7 +38,7 @@ type
         p.y is Distance
 
 
-proc asTheCrowFlies*( a, b: Point ): float {.procvar.} =
+proc asTheCrowFlies*[P: Point]( a, b: P ): float {.procvar.} =
     ## A convenience function that measures the exact distance between two
     ## points. This is meant to be used as the heuristic when creating a new
     ## `AStar` instance.
@@ -46,17 +46,17 @@ proc asTheCrowFlies*( a, b: Point ): float {.procvar.} =
         pow(float(a.x) - float(b.x), 2) +
         pow(float(a.y) - float(b.y), 2) )
 
-proc manhattan*(a, b: Point): auto {.procvar.} =
+proc manhattan*[P: Point, D: Distance](a, b: P): D {.procvar.} =
     ## A convenience function that measures the manhattan distance between two
     ## points. This is meant to be used as the heuristic when creating a new
     ## `AStar` instance.
-    return abs(a.x - b.x) + abs(a.y - b.y)
+    return D( abs(a.x - b.x) + abs(a.y - b.y) )
 
-proc chebyshev*(a, b: Point): auto {.procvar.} =
+proc chebyshev*[P: Point, D: Distance](a, b: P): D {.procvar.} =
     ## A convenience function that measures the chebyshev distance between two
     ## points. This is also known as the diagonal distance. This is meant to be
     ## used as the heuristic when creating a new `AStar` instance.
-    return max(abs(a.x - b.x), abs(a.y - b.y))
+    return D( max(abs(a.x - b.x), abs(a.y - b.y)) )
 
 proc onLineToGoal*[P: Point, D: Distance](
     weight: D, inner: proc (a, b: P): D
