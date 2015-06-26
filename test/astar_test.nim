@@ -83,10 +83,10 @@ template assert(
     heuristic: expr, distance: typedesc = float
 ) =
     ## Asserts a path is created across the given grid
-    let path = toSeq(astar[Grid, XY, distance](within, starting, to, heuristic))
+    let route = toSeq(path[Grid, XY, distance](within, starting, to, heuristic))
     checkpoint( str("Expected", within, equals) )
-    checkpoint( str("Actual", within, path) )
-    assert( path == @equals )
+    checkpoint( str("Actual", within, route) )
+    assert( route == @equals )
 
 proc walk( start: XY, directions: string ): seq[XY] =
     ## Creates a sequence of points from a string of movements
@@ -234,4 +234,13 @@ suite "A* should":
             heuristic = straightLine[XY, float](1.2, manhattan[XY, float]),
             starting = (1, 4), to = (8, 2),
             equals = "^ ^ > > ^ ^ > > > > > v v" )
+
+    test "Usage as an iterator":
+        let start: XY = (3, 3)
+        let goal: XY = (3, 6)
+        var result: seq[XY] = @[]
+        for point in path[Grid, XY, int](complexGrid, start, goal, manhattan):
+            result.add(point)
+        checkpoint( str("Actual", complexGrid, result) )
+        assert( result == walk(start, "< v v v >") )
 

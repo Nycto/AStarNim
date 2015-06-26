@@ -160,7 +160,7 @@ template astarAlgo[N: Node, D: Distance](
                 # Also add it to the frontier so we check out its neighbors
                 frontier.push( (next, priority, cost) )
 
-iterator astar*[G: Graph, N: Node, D: Distance](
+iterator path*[G: Graph, N: Node, D: Distance](
     graph: G, start, goal: N,
     heuristic: proc (node, goal: N): D
 ): N =
@@ -168,7 +168,7 @@ iterator astar*[G: Graph, N: Node, D: Distance](
     ## the current node and the goal
     astarAlgo( heuristic(next, goal) )
 
-iterator astar*[G: Graph, N: Node, D: Distance](
+iterator path*[G: Graph, N: Node, D: Distance](
     graph: G, start, goal: N,
     heuristic: proc (node, start, goal, cameFrom: N): D
 ): N =
@@ -176,7 +176,7 @@ iterator astar*[G: Graph, N: Node, D: Distance](
     ## the current node, the start, the goal, and the previous node
     astarAlgo( heuristic(next, start, goal, current.node) )
 
-iterator astar*[G: Graph, N: Node, D: Distance](
+iterator path*[G: Graph, N: Node, D: Distance](
     graph: G, start, goal: N,
     heuristic: proc (node, start, goal, parent: N, grandparent: Option[N]): D
 ): N =
