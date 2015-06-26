@@ -23,12 +23,12 @@ So, to actually hook your graph into this algorithm, there are three functions
 you need:
 
 * `neighbors`: An iterator that returns the neighbors of a node
-* `cost`: A proc that returns the cost of moving to a function
+* `cost`: A proc that returns the cost of moving from one node to another
 * `heuristic`: A proc that determines the priority of a node. This is the real
   magic of A-Star; the heuristic determines which nodes are looked at first so
-  it can skip looking at obviously wrong nodes. There are two implementations
-  provided by default: `asTheCrowFlies` and `manhattan`. See the API docs for
-  more information.
+  it can skip looking at obviously wrong nodes. There are a few implementations
+  provided by default. For example, `asTheCrowFlies` and `manhattan`. See the
+  API docs for more information.
 
 Example code is provided below. What you'll notice is that the code required to
 get a grid up and running takes longer than actually using the algorithm. As
@@ -82,12 +82,11 @@ let grid = @[
     @[ 0, 0, 0, 0, 0 ]
 ]
 
-# Configure the A* pathfinder. Notice that we pass in the heuristic (in this
-# case `asTheCrowFlies`) and the cost.
-let pathfinder = newAStar[Grid, Point, float](grid, asTheCrowFlies, cost)
+let start: Point = (x: 0, y: 3)
+let goal: Point = (x: 4, y: 3)
 
 # Pass in the start and end points and iterate over the results.
-for point in path[Grid, Point, float]( pathfinder, (x: 0, y: 3), (x: 4, y: 3) ):
+for point in path[Grid, Point, float](grid, start, goal, asTheCrowFlies):
     echo point
 ```
 
