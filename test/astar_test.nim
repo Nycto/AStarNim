@@ -80,7 +80,7 @@ proc str( title: string, grid: Grid, path: openArray[XY] ): string =
 
 template assert(
     within: Grid, starting: XY, to: XY, equals: openArray[XY],
-    heuristic: expr, distance: typedesc = float
+    heuristic: expr, distance: typedesc
 ) =
     ## Asserts a path is created across the given grid
     let route = toSeq(path[Grid, XY, distance](within, starting, to, heuristic))
@@ -104,7 +104,7 @@ proc walk( start: XY, directions: string ): seq[XY] =
 
 template assert(
     within: Grid, starting: XY, to: XY, equals: string,
-    heuristic: expr, distance: typedesc = float
+    heuristic: expr, distance: typedesc
 ) =
     assert(
         within, starting, to, walk(starting, equals),
@@ -121,7 +121,8 @@ suite "A* should":
                  ". . ."),
             heuristic = asTheCrowFlies,
             starting = (0, 0), to = (0, 0),
-            equals = [(0, 0)] )
+            equals = [(0, 0)],
+            distance = float )
 
     test "Yield two points for connected points":
         assert(
@@ -130,7 +131,8 @@ suite "A* should":
                  ". . ."),
             heuristic = asTheCrowFlies,
             starting = (0, 0), to = (1, 0),
-            equals = [ (0, 0), (1, 0) ] )
+            equals = [ (0, 0), (1, 0) ],
+            distance = float )
 
     test "Yield nothing if the goal is unreachable":
         assert(
@@ -139,7 +141,8 @@ suite "A* should":
                  ". . ."),
             heuristic = asTheCrowFlies,
             starting = (0, 0), to = (2, 1),
-            equals = [] )
+            equals = [],
+            distance = float )
 
         assert(
             grid(". # .",
@@ -147,7 +150,8 @@ suite "A* should":
                  ". . ."),
             heuristic = asTheCrowFlies,
             starting = (0, 0), to = (2, 2),
-            equals = [] )
+            equals = [],
+            distance = float )
 
     test "Short example":
         assert(
@@ -156,7 +160,8 @@ suite "A* should":
                  ". . ."),
             heuristic = asTheCrowFlies,
             starting = (0, 0), to = (2, 2),
-            equals = "v v > >")
+            equals = "v v > >",
+            distance = float )
 
 
     let complexGrid = grid(
@@ -176,7 +181,8 @@ suite "A* should":
             within = complexGrid,
             heuristic = asTheCrowFlies,
             starting = (1, 4), to = (8, 5),
-            equals = "> ^ > ^ ^ ^ > > > v > v > v v v" )
+            equals = "> ^ > ^ ^ ^ > > > v > v > v v v",
+            distance = float )
 
     test "Using a manhatten distance":
         assert(
@@ -212,7 +218,8 @@ suite "A* should":
             within = complexGrid,
             heuristic = weight,
             starting = (1, 4), to = (8, 5),
-            equals = "> ^ > ^ ^ ^ > > > > > v v v v v" )
+            equals = "> ^ > ^ ^ ^ > > > > > v v v v v",
+            distance = float )
 
     test "onLineToGoal":
         assert(
@@ -226,14 +233,16 @@ suite "A* should":
                 ". . . . . . . . . . . . . ."),
             heuristic = onLineToGoal[XY, float](1.5, asTheCrowFlies),
             starting = (1, 1), to = (12, 5),
-            equals = "> v > > > v > > > v > > > v >" )
+            equals = "> v > > > v > > > v > > > v >",
+            distance = float )
 
     test "straightLine":
         assert(
             within = complexGrid,
             heuristic = straightLine[XY, float](1.2, manhattan[XY, float]),
             starting = (1, 4), to = (8, 2),
-            equals = "^ ^ > > ^ ^ > > > > > v v" )
+            equals = "^ ^ > > ^ ^ > > > > > v v",
+            distance = float )
 
     test "Usage as an iterator":
         let start: XY = (3, 3)
