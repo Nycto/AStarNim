@@ -23,13 +23,9 @@ test: $(TESTS)
 # Compiles a nim file
 define COMPILE
 nimble c $(FLAGS) \
-		--path:. --nimcache:./build/nimcache \
+		--path:. --nimcache:./build/nimcache --verbosity:0 \
 		--out:../build/$(notdir $(basename $1)) \
-		$1 \
-	| grep -v \
-		-e "^Hint: " \
-		-e "^CC: " \
-		-e "Hint: 'AbortOnError'"
+		$1
 endef
 
 
@@ -76,7 +72,7 @@ build/readme_%: README.md
 	@echo "$$EXTRACT_README_CODE" > build/extract_readme_code.nim
 	$(call COMPILE,build/extract_readme_code.nim)
 	@build/extract_readme_code
-	ls build/readme_*.nim | xargs -n1 nim check --path:.
+	ls build/readme_*.nim | xargs -n1 nim check --path:. --verbosity:0
 
 
 # Watches for changes and reruns
