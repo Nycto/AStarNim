@@ -41,6 +41,43 @@ API Docs
 
 http://nycto.github.io/AStarNim/astar.html
 
+Defining a Graph
+----------------
+
+To connect a graph with the AStar library, you must implement three functions:
+
+1. '''neighbors''', which iterates over the neighbors of a node. Its
+   signature should look like this:
+
+   ```nimrod
+   iterator neighbors*(grid: MyGraph, node: MyNode): Node
+   ```
+
+2. '''cost''', which returns the exact price for moving between nodes. It
+   should look like this:
+
+   ```nimrod
+   proc cost*(grid: MyGraph, a, b: MyNode): Distance
+   ```
+
+3. '''heuristic''', which estimates the how close a point is to the goal. It
+   has three possible signatures:
+
+   ```
+   proc heuristic*(grid: MyGraph, next, goal: MyNode): Distance
+   ```
+
+   ```
+   proc heuristic*(grid: MyGraph, next, start, goal, parent: MyNode): Distance
+   ```
+
+   ```
+   proc heuristic*(
+       grid: MyGraph, next, start, goal, parent: MyNode,
+       grandparent: Option[MyNode]
+   ): Distance
+   ```
+
 Full Example
 ------------
 
