@@ -1,9 +1,53 @@
-import astar, unittest, sets, sequtils, strutils, ropes, sets, math
+import astar, unittest, sets, sequtils, strutils, ropes, sets, optional_t, math
 
 type
     Grid = seq[seq[int]]
-
     XY = tuple[x, y: int]
+
+template defineGrid( name: expr, body: stmt ) {.immediate.} =
+    ## Creates a distinct phantom grid type for using a custom heuristic
+    type name = distinct Grid
+    converter toGrid(g: name): Grid = Grid(g)
+    converter toSubgrid(g: Grid): name = name(g)
+    proc `[]`( grid: name, index: int ): seq[int] = Grid(grid)[index]
+    body
+
+defineGrid(CrowGrid):
+    ## A grid that uses 'asTheCrowFlies' for the heuristic
+    proc heuristic( grid: CrowGrid, a, b: XY ): float = asTheCrowFlies(a, b)
+
+defineGrid(ManhattanGrid):
+    ## A grid that uses 'manhattan' for the heuristic
+    proc heuristic( grid: ManhattanGrid, a, b: XY ): int = manhattan(a, b)
+
+defineGrid(ChebyshevGrid):
+    ## A grid that uses 'chebyshev' for the heuristic
+    proc heuristic( grid: ChebyshevGrid, a, b: XY ): int = chebyshev(a, b)
+
+defineGrid(LineToGoalGrid):
+    ## A grid that prioritizes nodes on the line to the goal
+    proc heuristic(
+        grid: LineToGoalGrid, node, start, goal, cameFrom: XY
+    ): float =
+        return 1.5 * onLineToGoal[XY, float](node, start, goal) +
+            asTheCrowFlies(node, goal)
+
+defineGrid(StraightLineGrid):
+    ## A grid that prioritizes paths that don't have any turns
+    proc heuristic(
+        grid: StraightLineGrid,
+        node, start, goal, cameFrom: XY,
+        grandparent: Option[XY]
+    ): float =
+        straightLine[XY, float](1.2, node, grandparent) *
+            manhattan[XY, float](node, goal)
+
+type AnyGrid = ## A unified type for all known test grids
+    CrowGrid|ManhattanGrid|ChebyshevGrid|LineToGoalGrid|StraightLineGrid
+
+proc cost[T]( grid: AnyGrid, a, b: XY ): T =
+    ## Returns the cost associated with moving to a point
+    return T( grid[b.y][b.x] )
 
 proc grid( ascii: varargs[string] ): Grid =
     ## Creates a Grid from ascii art strings
@@ -21,11 +65,7 @@ proc grid( ascii: varargs[string] ): Grid =
             else: row.add(-1)
         result.add(row)
 
-proc cost[T]( grid: Grid, a, b: XY ): T =
-    ## Returns the cost associated with moving to a point
-    return T( grid[b.y][b.x] )
-
-template yieldIfExists( grid: Grid, point: XY ) =
+template yieldIfExists( grid: AnyGrid, point: XY ) =
     ## Checks if a point exists within a grid, then yields it if it does
     let isValid =
         point.y >= 0 and point.y < grid.len and
@@ -34,7 +74,7 @@ template yieldIfExists( grid: Grid, point: XY ) =
     if isValid:
         yield point
 
-iterator neighbors*( grid: Grid, point: XY ): XY =
+iterator neighbors*( grid: AnyGrid, point: XY ): XY =
     ## Yields the connected neighbors of a point
     yieldIfExists( grid, (x: point.x - 1, y: point.y) )
     yieldIfExists( grid, (x: point.x + 1, y: point.y) )
@@ -45,7 +85,7 @@ proc `$`( point: XY ): string =
     ## Converts a point to a readable string
     return "(" & $point.x & ", " & $point.y & ")"
 
-proc str( title: string, grid: Grid, path: openArray[XY] ): string =
+proc str( title: string, grid: AnyGrid, path: openArray[XY] ): string =
     ## Converts a grid to a string
 
     let pathPoints = toSet(path)
@@ -79,11 +119,11 @@ proc str( title: string, grid: Grid, path: openArray[XY] ): string =
     return $str
 
 template assert(
-    within: Grid, starting: XY, to: XY, equals: openArray[XY],
-    heuristic: expr, distance: typedesc
+    heuristic: typedesc, within: Grid, starting: XY, to: XY,
+    equals: openArray[XY], distance: typedesc
 ) =
     ## Asserts a path is created across the given grid
-    let route = toSeq(path[Grid, XY, distance](within, starting, to, heuristic))
+    let route = toSeq(path[heuristic, XY, distance](within, starting, to))
     checkpoint( str("Expected", within, equals) )
     checkpoint( str("Actual", within, route) )
     assert( route == @equals )
@@ -103,62 +143,60 @@ proc walk( start: XY, directions: string ): seq[XY] =
             result.add(current)
 
 template assert(
+    heuristic: typedesc,
     within: Grid, starting: XY, to: XY, equals: string,
-    heuristic: expr, distance: typedesc
+    distance: typedesc
 ) =
-    assert(
-        within, starting, to, walk(starting, equals),
-        heuristic, distance
-    )
+    assert(heuristic, within, starting, to, walk(starting, equals), distance)
 
 
 suite "A* should":
 
     test "Yield a single point when goal == start":
         assert(
+            heuristic = CrowGrid,
             grid(". . .",
                  ". . .",
                  ". . ."),
-            heuristic = asTheCrowFlies,
             starting = (0, 0), to = (0, 0),
             equals = [(0, 0)],
             distance = float )
 
     test "Yield two points for connected points":
         assert(
+            heuristic = CrowGrid,
             grid(". . .",
                  ". . .",
                  ". . ."),
-            heuristic = asTheCrowFlies,
             starting = (0, 0), to = (1, 0),
             equals = [ (0, 0), (1, 0) ],
             distance = float )
 
     test "Yield nothing if the goal is unreachable":
         assert(
+            heuristic = CrowGrid,
             grid(". . .",
                  ". . #",
                  ". . ."),
-            heuristic = asTheCrowFlies,
             starting = (0, 0), to = (2, 1),
             equals = [],
             distance = float )
 
         assert(
+            heuristic = CrowGrid,
             grid(". # .",
                  "# # .",
                  ". . ."),
-            heuristic = asTheCrowFlies,
             starting = (0, 0), to = (2, 2),
             equals = [],
             distance = float )
 
     test "Short example":
         assert(
+            heuristic = CrowGrid,
             grid(". * .",
                  ". # .",
                  ". . ."),
-            heuristic = asTheCrowFlies,
             starting = (0, 0), to = (2, 2),
             equals = "v v > >",
             distance = float )
@@ -178,22 +216,23 @@ suite "A* should":
 
     test "Complex example":
         assert(
+            heuristic = CrowGrid,
             within = complexGrid,
-            heuristic = asTheCrowFlies,
             starting = (1, 4), to = (8, 5),
             equals = "> ^ > ^ ^ ^ > > > v > v > v v v",
             distance = float )
 
-    test "Using a manhatten distance":
+    test "Using a manhattan distance":
         assert(
+            heuristic = ManhattanGrid,
             within = complexGrid,
-            heuristic = manhattan,
             starting = (1, 4), to = (8, 5),
             equals = "> ^ > ^ ^ ^ > > > > > v v v v v",
             distance = int)
 
     test "Using a chebyshev distance":
         assert(
+            heuristic = ChebyshevGrid,
             grid(
                 ". . . . . . . ",
                 ". . . . * * . ",
@@ -202,27 +241,13 @@ suite "A* should":
                 "# # # * 2 2 * ",
                 ". . . * * * * ",
                 ". . . . . . . "),
-            heuristic = chebyshev,
             starting = (1, 1), to = (3, 6),
             equals = "v v > > > v v v <",
             distance = int)
 
-    test "Complex heuristic":
-
-        proc weight (node, start, goal, cameFrom: XY): float {.procvar.}=
-            result = asTheCrowFlies(node, goal)
-            if cameFrom.x == node.x:
-                result = result * 1.5
-
-        assert(
-            within = complexGrid,
-            heuristic = weight,
-            starting = (1, 4), to = (8, 5),
-            equals = "> ^ > ^ ^ ^ > > > > > v v v v v",
-            distance = float )
-
     test "onLineToGoal":
         assert(
+            heuristic = LineToGoalGrid,
             within = grid(
                 ". . . . . . . . . . . . . .",
                 ". . . . . . . . . . . . . .",
@@ -231,15 +256,14 @@ suite "A* should":
                 ". . . . . . . . . . . . . .",
                 ". . . . . . . . . . . . . .",
                 ". . . . . . . . . . . . . ."),
-            heuristic = onLineToGoal[XY, float](1.5, asTheCrowFlies),
             starting = (1, 1), to = (12, 5),
             equals = "> v > > > v > > > v > > > v >",
             distance = float )
 
     test "straightLine":
         assert(
+            heuristic = StraightLineGrid,
             within = complexGrid,
-            heuristic = straightLine[XY, float](1.2, manhattan[XY, float]),
             starting = (1, 4), to = (8, 2),
             equals = "^ ^ > > ^ ^ > > > > > v v",
             distance = float )
@@ -248,7 +272,7 @@ suite "A* should":
         let start: XY = (3, 3)
         let goal: XY = (3, 6)
         var result: seq[XY] = @[]
-        for point in path[Grid, XY, int](complexGrid, start, goal, manhattan):
+        for point in path[CrowGrid, XY, int](complexGrid, start, goal):
             result.add(point)
         checkpoint( str("Actual", complexGrid, result) )
         assert( result == walk(start, "< v v v >") )

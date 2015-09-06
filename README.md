@@ -69,9 +69,13 @@ iterator neighbors*( grid: Grid, point: Point ): Point =
     yieldIfExists( grid, (x: point.x, y: point.y - 1) )
     yieldIfExists( grid, (x: point.x, y: point.y + 1) )
 
-proc cost*(grid: Grid, a, b: Point): float {.procvar.}=
+proc cost*(grid: Grid, a, b: Point): float =
     ## Returns the cost of moving from point `a` to point `b`
-    return float(grid[a.y][a.x])
+    float(grid[a.y][a.x])
+
+proc heuristic*( grid: Grid, node, goal: Point ): float =
+    ## Returns the priority of inspecting the given node
+    asTheCrowFlies(node, goal)
 
 # A sample grid. Each number represents the cost of moving to that space
 let grid = @[
@@ -86,7 +90,7 @@ let start: Point = (x: 0, y: 3)
 let goal: Point = (x: 4, y: 3)
 
 # Pass in the start and end points and iterate over the results.
-for point in path[Grid, Point, float](grid, start, goal, asTheCrowFlies):
+for point in path[Grid, Point, float](grid, start, goal):
     echo point
 ```
 
