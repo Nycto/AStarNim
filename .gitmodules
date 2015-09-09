@@ -1,0 +1,3 @@
+[submodule "NimMakefile"]
+	path = NimMakefile
+	url = https://github.com/Nycto/NimMakefile

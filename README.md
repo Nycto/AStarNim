@@ -49,14 +49,14 @@ To connect a graph with the AStar library, you must implement three functions:
 1. __neighbors__, which iterates over the neighbors of a node. Its
    signature should look like this:
 
-   ```nimrod
+   ```
    iterator neighbors*(grid: MyGraph, node: MyNode): Node
    ```
 
 2. __cost__, which returns the exact price for moving between nodes. It
    should look like this:
 
-   ```nimrod
+   ```
    proc cost*(grid: MyGraph, a, b: MyNode): Distance
    ```
 
