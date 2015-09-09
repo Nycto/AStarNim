@@ -63,15 +63,15 @@ To connect a graph with the AStar library, you must implement three functions:
 3. __heuristic__, which estimates the how close a point is to the goal. It
    has three possible signatures:
 
-   ```nimrod
+   ```
    proc heuristic*(grid: MyGraph, next, goal: MyNode): Distance
    ```
 
-   ```nimrod
+   ```
    proc heuristic*(grid: MyGraph, next, start, goal, parent: MyNode): Distance
    ```
 
-   ```nimrod
+   ```
    proc heuristic*(
        grid: MyGraph, next, start, goal, parent: MyNode,
        grandparent: Option[MyNode]
