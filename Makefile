@@ -1,2 +1,2 @@
-$(shell git submodule init NimMakefile)
+$(shell git submodule update --init NimMakefile)
 include NimMakefile/makefile.mk
