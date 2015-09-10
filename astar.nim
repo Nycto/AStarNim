@@ -7,7 +7,7 @@
 ## http://www.redblobgames.com/pathfinding/a-star/introduction.html
 ##
 
-import binaryheap, tables, hashes, math, optional_t
+import binaryheap, tables, hashes, math, options
 
 type
     Distance* = int|float
@@ -135,12 +135,12 @@ proc calcHeuristic[G: Graph, N: Node, D: Distance] (
     when compiles(graph.heuristic(next, start, goal, current.node)):
         return D(graph.heuristic(next, start, goal, current.node))
 
-    elif compiles(graph.heuristic(next, start, goal, current.node, None[N]())):
+    elif compiles(graph.heuristic(next, start, goal, current.node, none(N))):
         var grandparent: Option[N]
         if cameFrom.hasKey(current.node):
-            grandparent = Some[N]( `[]`(cameFrom, current.node).node )
+            grandparent = some[N]( `[]`(cameFrom, current.node).node )
         else:
-            grandparent = None[N]()
+            grandparent = none(N)
         return D(graph.heuristic(next, start, goal, current.node, grandparent))
 
     else:
