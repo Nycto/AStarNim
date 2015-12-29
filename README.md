@@ -140,3 +140,7 @@ not, see http://www.opensource.org/licenses/mit-license.php
 
 
 
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/Nycto/astarnim/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
