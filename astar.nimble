@@ -6,4 +6,4 @@ description   = "Basic A-Star path finding"
 license       = "MIT"
 
 [Deps]
-Requires: "nim >= 0.11.2, binaryheap >= 0.1.0"
+Requires: "nim >= 0.13.0, binaryheap >= 0.1.0"
