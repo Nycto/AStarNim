@@ -1,9 +1,11 @@
-[Package]
-name          = "astar"
+# Package
+
 version       = "0.4.0"
 author        = "Nycto"
 description   = "Basic A-Star path finding"
 license       = "MIT"
 
-[Deps]
-Requires: "nim >= 0.13.0, binaryheap >= 0.1.0"
+# Deps
+
+requires "nim >= 0.13.0"
+requires "binaryheap >= 0.1.0"
