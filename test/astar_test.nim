@@ -1,4 +1,4 @@
-import astar, unittest, sets, sequtils, strutils, ropes, sets, options, math
+import astar, unittest, sets, sequtils, strutils, ropes, sets, options, math, hashes
 
 type
     Grid = seq[seq[int]]

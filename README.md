@@ -82,7 +82,7 @@ Full Example
 ------------
 
 ```nimrod
-import astar
+import astar, hashes
 
 type
     Grid = seq[seq[int]]

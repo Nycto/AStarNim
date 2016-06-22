@@ -22,7 +22,7 @@ type
         ## * `hash`: Nodes are used as keys in a table, so they need to be
         ##   hashable
         `==`(n, n) is bool
-        `hash`(n) is THash
+        `hash`(n) is Hash
 
     Graph* = concept g
         ## The graph being traversed.
