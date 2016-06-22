@@ -28,8 +28,10 @@ type
         ## The graph being traversed.
         ## * `nieghbors`: Iterates over the neighbors of a node in the graph
         ## * `cost`: Returns the price for moving between two nodes
-        neighbors(g, Node) is iterator Node
-        cost(g, Node, Node) is Distance
+        var node: Node
+        for neighbor in g.neighbors(node):
+            type(neighbor) is Node
+        cost(g, node, node) is Distance
 
     Point* = concept p
         ## An X/Y Coordinate. This isn't used by the A-Star algorithm itself,
