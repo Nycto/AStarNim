@@ -1,9 +1,8 @@
-os: linux
-language: c
-install: bash <(curl -s https://raw.githubusercontent.com/Nycto/ExtraNimble/master/travis-setup.sh)
-before_script: export PATH="$HOME/Nim/bin:$PATH"
-script: nimble all
-sudo: false
-cache:
-  directories:
-    - $HOME/Nim
+sudo: required
+services:
+  - docker
+before_install:
+  - docker pull nimlang/nim
+script:
+  - docker run nimlang/nim nim --version
+  - docker run -v "$(pwd):/project" -w /project nimlang/nim sh -c "nimble install -dy && nimble test"

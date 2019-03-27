@@ -1,2 +1,11 @@
-.build
-astar.html
+# Ignore all
+*
+
+# Unignore all with extensions
+!*.*
+
+# Unignore all dirs
+!*/
+
+build
+.DS_Store

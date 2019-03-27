@@ -4,7 +4,7 @@ type
     Grid = seq[seq[int]]
     XY = tuple[x, y: int]
 
-template defineGrid( name: typedesc, body: stmt ) {.immediate.} =
+template defineGrid(name: typedesc, body: untyped) {.immediate.} =
     ## Creates a distinct phantom grid type for using a custom heuristic
     type name = distinct Grid
     converter toGrid(g: name): Grid = Grid(g)
