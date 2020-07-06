@@ -9,6 +9,6 @@ skipDirs      = @[]
 
 # Deps
 
-requires "nim >= 0.14.0"
+requires "nim >= 1.2.0"
 requires "binaryheap >= 0.1.0"
 
