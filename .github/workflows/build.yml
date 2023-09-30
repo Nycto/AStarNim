@@ -1,0 +1,19 @@
+name: Build
+on: [push, pull_request]
+jobs:
+
+  test:
+    runs-on: ubuntu-latest
+    container: nimlang/choosenim
+    strategy:
+      matrix:
+        threads: [on, off]
+        nim: [ 2.0.0, 1.6.14 ]
+    steps:
+    - uses: actions/checkout@v1
+    - name: Choose Nim
+      run: choosenim update -y ${{ matrix.nim }}
+    - name: Safe git directory
+      run: git config --global --add safe.directory "$(pwd)"
+    - name: Test
+      run: nimble --threads:${{ matrix.threads }} test -y

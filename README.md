@@ -1,5 +1,8 @@
-AStarNim [![Build Status](https://travis-ci.org/Nycto/AStarNim.svg?branch=master)](https://travis-ci.org/Nycto/AStarNim)
+AStarNim
 ========
+
+[![Build](https://github.com/Nycto/AStarNim/actions/workflows/build.yml/badge.svg)](https://github.com/Nycto/AStarNim/actions/workflows/build.yml)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/Nycto/AStarNim/blob/main/LICENSE.md)
 
 The classic A-Star path finding algorith built in Nim
 
@@ -137,6 +140,3 @@ License
 This library is released under the MIT License, which is pretty spiffy. You
 should have received a copy of the MIT License along with this program. If
 not, see http://www.opensource.org/licenses/mit-license.php
-
-
-
