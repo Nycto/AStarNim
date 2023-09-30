@@ -1,0 +1,10 @@
+Distance	astar.html#Distance	astar: Distance	
+Node	astar.html#Node	astar: Node	
+Graph	astar.html#Graph	astar: Graph	
+Point	astar.html#Point	astar: Point	
+asTheCrowFlies	astar.html#asTheCrowFlies,P,P	astar: asTheCrowFlies[P: Point](node, goal: P): float	
+manhattan	astar.html#manhattan,P,P	astar: manhattan[P: Point; D: Distance](node, goal: P): D	
+chebyshev	astar.html#chebyshev,P,P	astar: chebyshev[P: Point; D: Distance](node, goal: P): D	
+onLineToGoal	astar.html#onLineToGoal,P,P,P	astar: onLineToGoal[P: Point; D: Distance](node, start, goal: P): D	
+straightLine	astar.html#straightLine,D,P,Option[P: Point]	astar: straightLine[P: Point; D: Distance](weight: D; node: P; grandparent: Option[P]): D	
+path	astar.html#path.i,G,N,N	astar: path[G: Graph; N: Node; D: Distance](graph: G; start, goal: N): N	
